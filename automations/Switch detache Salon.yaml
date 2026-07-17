@@ -1,0 +1,11 @@
+- id: detachSalon
+  alias: Zi8 detach → toggle lumières salon
+  triggers:
+  - entity_id: sensor.zi8_action
+    to: toggle
+    trigger: state
+  actions:
+  - target:
+      entity_id: light.lumieres_salon
+    action: light.toggle
+  mode: single

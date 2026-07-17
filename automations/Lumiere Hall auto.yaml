@@ -1,0 +1,53 @@
+- id: Detection_PRS2
+  alias: PetiteLumière Hall RDC (réarmable après 20h30)
+  description: Allume zamp6 si présence + sombre entre 20h30 et 07h15. Éteint 4 min après la dernière absence (réarmable), à toute heure.
+  mode: restart
+
+  variables:
+    lux_threshold: 500
+
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.pir2_occupancy
+
+  action:
+    - choose:
+        # ---- ALLUMAGE (présence) : limité à 20:30–07:15 + lux ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.pir2_occupancy
+              state: "on"
+            - condition: template
+              value_template: >
+                {{ (states('sensor.zrain_lux_illuminance') | float(9999)) < lux_threshold }}
+            - condition: or
+              conditions:
+                - condition: time
+                  after: "20:30:00"
+                  before: "23:59:59"
+                - condition: time
+                  after: "00:00:00"
+                  before: "07:15:00"
+          sequence:
+            - service: light.turn_on
+              target:
+                entity_id: light.zamp7
+              data:
+                brightness_pct: 0.9
+                transition: 0.5
+
+
+        # ---- EXTINCTION (absence) : jamais limitée dans le temps ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.pir2_occupancy
+              state: "off"
+          sequence:
+            - delay: "00:04:00"     # réarmable via mode: restart
+            - condition: state
+              entity_id: binary_sensor.pir2_occupancy
+              state: "off"
+            - service: light.turn_off
+              target:
+                entity_id: light.zamp7

@@ -1,0 +1,174 @@
+version: 4
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://core-mosquitto:1883
+  user: addons
+  password: dei8ji2muZaew8xaiw6ohngaon6eehieN7ahphinohyeengeu9Ra8Iew5ieVeedu
+serial:
+  adapter: zstack
+  baudrate: 115200
+  rtscts: false
+  port: /dev/ttyUSB0
+advanced:
+  log_level: info
+  channel: 25
+  network_key:
+    - 130
+    - 86
+    - 78
+    - 129
+    - 51
+    - 26
+    - 11
+    - 59
+    - 173
+    - 16
+    - 123
+    - 135
+    - 172
+    - 11
+    - 213
+    - 21
+  pan_id: 37809
+  ext_pan_id:
+    - 66
+    - 176
+    - 172
+    - 153
+    - 63
+    - 94
+    - 202
+    - 14
+frontend:
+  enabled: true
+  port: 8099
+homeassistant:
+  enabled: true
+  legacy_action_sensor: true
+  experimental_event_entities: false
+availability:
+  enabled: true
+blocklist: []
+devices:
+  '0xa4c138da8076b4d5':
+    friendly_name: MS1
+    icon: device_icons/05043f6672d9790f83e216061a1aa826.png
+    description: Capteur Escalier
+  '0xa4c138035f66ce8c':
+    friendly_name: Zi5
+    icon: device_icons/38cbe88facdfd7f961f3a4a7862207d5.png
+    description: Applique Hall RdC
+  '0xa4c138f7aeb02076':
+    friendly_name: TRV_bureau_Johan
+    icon: device_icons/c79565e5f812323f3ab79179e38974f1.png
+  '0xa4c138766164f1ec':
+    friendly_name: Z1i vmc
+  '0xa4c138f789385900':
+    friendly_name: TRV_bureau_Mami
+  '0xa4c1387a7f9718c1':
+    friendly_name: Z2i_bureau_Mami
+  '0xa4c13870695cdeac':
+    friendly_name: Zi6
+    description: Couloir R+1
+  '0xa4c1389a5ded3a65':
+    friendly_name: Porte entree
+  '0xa4c138ec9bf8a273':
+    friendly_name: PIR1
+    description: Sortie bureau Johan
+  '0xa4c13867b491bf58':
+    friendly_name: MS2
+    description: Salon
+  '0xa4c1384c581c3f34':
+    friendly_name: PIR2
+    description: Hall RDC
+  '0xa4c13818973ee8e7':
+    friendly_name: porte_mal
+  '0xa4c138a011a07d5a':
+    friendly_name: zPR1
+    description: Lampadaire R+1
+  '0xa4c1382c7ac9854b':
+    friendly_name: zTH01
+    temperature_precision: 1
+    humidity_precision: 1
+    description: SdB RdC
+  '0x7cc6b6fffecb1c0a':
+    friendly_name: zi7
+    state_action: true
+    description: Lumière cuisine
+  '0xa4c138e26a0f4091':
+    friendly_name: zi9
+  '0xa4c1386a65d9b164':
+    friendly_name: zTH02
+    description: Chambre enfants
+  '0xa4c13846de5abe36':
+    friendly_name: PIR3
+    description: Cuisine
+  '0xa4c138fa694e7d75':
+    friendly_name: zPR2
+    description: Machine a café
+  '0xa4c138c9c7c55942':
+    friendly_name: TRV2_MetF
+  '0xa4c13811d94e55f2':
+    friendly_name: TRV_Parent
+  '0xc890a81f16020000':
+    friendly_name: zAmp1
+    description: Ampoule SdB RdC
+  '0xa4c138cbf28c3bbc':
+    friendly_name: Zamp3
+    description: Ampoule SaM_2
+  '0xa4c1389eaf601dfe':
+    friendly_name: zamp2
+    description: Ampoule SaM
+  '0xa4c138db81beaf3f':
+    friendly_name: zamp4
+    description: Ampoule SaM_3
+  '0x00be44fffe6e07dd':
+    friendly_name: zi8
+    description: lumière SaM Detach
+  '0xa4c138c78e46f5e9':
+    friendly_name: zRepetor1
+  '0xa4c13872cbd0bb42':
+    friendly_name: zRain_lux
+  '0xa4c138c48c893fa0':
+    friendly_name: zBP1
+  '0xa4c13811b3610f7b':
+    friendly_name: zRBP1
+  '0xa4c13817b4ab4798':
+    friendly_name: Zamp5
+    description: Hall entrée 2
+  '0xa4c138eb098473a5':
+    friendly_name: Zamp6
+    description: 'Hall entrée '
+  '0xa4c138b2acc56fd4':
+    friendly_name: zAmp7
+    description: Hall RdC
+  '0xa4c13823d2e93cf6':
+    friendly_name: zPIR3
+    description: Entree RDC
+  '0xa4c1386847ef5fa0':
+    friendly_name: zPIR4
+    description: Salon
+  '0xa4c138c11c3913ad':
+    friendly_name: zTH05
+    description: Chambre parents
+  '0xa4c13881e7bc1d16':
+    friendly_name: zBP2
+  '0xa4c138710e4769c9':
+    friendly_name: zTH03
+    description: Chambre Parents
+  '0x8c8b48fffe67b093':
+    friendly_name: zi10
+    description: Chambre Enfants
+  '0xa4c13828cb4fdffd':
+    friendly_name: zPIR5
+    description: Chambre Enfant
+  '0xa4c1384351f926b1':
+    friendly_name: zMS3
+    description: SdB RDC
+  '0xa4c138b65a5979d6':
+    friendly_name: zi3
+    description: Escalier Etage
+  '0xa4c1381c71366822':
+    friendly_name: zPR4
+  '0xa4c1381450cdd10d':
+    friendly_name: zth06

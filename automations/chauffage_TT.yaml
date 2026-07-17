@@ -1,0 +1,124 @@
+- id: 'Chauffage_TT'
+  alias: Chauffage télétravail with Calendar
+  mode: single
+
+  trigger:
+    - platform: time
+      at: "07:30:00"
+      id: matin
+    - platform: time
+      at: "17:00:00"
+      id: soir
+  # Exécution uniquement jours ouvrés, sans CONGE ni jour férié
+  condition:
+    - condition: template
+      # Weekday : 0=lundi, 1=mardi, ...
+      value_template: >
+        {% set wd = now().weekday() in [0,1,2,3,4] %}
+        {% set conge = is_state('calendar.famille_briche','on') and (state_attr('calendar.famille_briche','message')|default('')|lower == 'conge') %}
+        {% set ferie = is_state('calendar.jours_feries_france','on') %}
+        {{ wd and not conge and not ferie }}
+
+  action:
+    - variables:
+        # État du calendrier famille
+        cal_on: "{{ is_state('calendar.famille_briche','on') }}"
+        cal_all_day: "{{ state_attr('calendar.famille_briche','all_day') | default(false) }}"
+        cal_msg: "{{ state_attr('calendar.famille_briche','message') | string }}"
+
+        # Y a-t-il un TT all-day aujourd'hui ?
+        is_tt_today: >
+          {{ cal_on and cal_all_day and cal_msg in ['TT_Johan','TT_Mami'] }}
+
+        tt_j: "{{ is_tt_today and cal_msg == 'TT_Johan' }}"
+        tt_m: "{{ is_tt_today and cal_msg == 'TT_Mami' }}"
+
+    - choose:
+        # --- CAS 17:00 : chauffage central à 19.5 °C ---
+        - conditions:
+            - condition: trigger
+              id: soir
+          sequence:
+            - condition: template
+              value_template: >
+                {{ state_attr('climate.thermostat_hc1','temperature') | float(0) != 19.5 }}
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.thermostat_hc1
+              data:
+                temperature: 19.5
+
+        # --- CAS 07:30 : logique télétravail ---
+        - conditions:
+            - condition: trigger
+              id: matin
+          sequence:
+            # --- Chauffage central : dépend de si TT prévu ou non ---
+            - choose:
+                # Cas avec TT : HC1 à 20.5 °C
+                - conditions:
+                    - condition: template
+                      value_template: "{{ is_tt_today }}"
+                  sequence:
+                    - condition: template
+                      value_template: >
+                        {{ state_attr('climate.thermostat_hc1','temperature') | float(0) != 20.5 }}
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.thermostat_hc1
+                      data:
+                        temperature: 20.5
+
+                # Cas sans aucun TT prévu aujourd'hui : HC1 à 18.5 °C
+                - conditions:
+                    - condition: template
+                      value_template: "{{ not is_tt_today }}"
+                  sequence:
+                    - condition: template
+                      value_template: >
+                        {{ state_attr('climate.thermostat_hc1','temperature') | float(0) != 18.5 }}
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.thermostat_hc1
+                      data:
+                        temperature: 18.5
+
+            # --- Bureau Johan : passer en heat + 20 °C si TT_Johan ---
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ tt_j }}"
+                  sequence:
+                    - condition: template
+                      value_template: >
+                        {{ state_attr('climate.trv_bureau_johan','hvac_mode') != 'heat' }}
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.trv_bureau_johan
+                      data:
+                        hvac_mode: "heat"
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.trv_bureau_johan
+                      data:
+                        temperature: 20
+
+            # --- Bureau Mami : passer en heat + 21 °C si TT_Mami ---
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ tt_m }}"
+                  sequence:
+                    - condition: template
+                      value_template: >
+                        {{ state_attr('climate.trv_bureau_mami','hvac_mode') != 'heat' }}
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.trv_bureau_mami
+                      data:
+                        hvac_mode: "heat"
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.trv_bureau_mami
+                      data:
+                        temperature: 21

@@ -1,0 +1,118 @@
+- id: lumiere_auto_cuisine
+  alias: Cuisine – Lumières auto (PIR3 → light.lumieres_cuisines)
+  description: >
+    Allume si présence ET nuit/sombre, sauf si éteint au bouton depuis moins de 15s (période de grâce).
+    Intensité adaptative : veilleuse à 10% la nuit ou en mode TV, 100% le reste du temps.
+    Extinction : après 1 min (TV), 10 min (normal) ou 15 min (si forcé, éteint aussi le forçage).
+  mode: restart
+
+  variables:
+    lux_threshold: 450
+    is_dark: >
+      {{ is_state('sun.sun','below_horizon') or (states('sensor.ms2_illuminance')|float(9999)) < lux_threshold }}
+
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.pir3_occupancy
+
+  action:
+    - choose:
+        # ---- ALLUMAGE ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.pir3_occupancy
+              state: "on"
+            - condition: template
+              value_template: "{{ is_dark }}"
+            # Période de grâce de 15 secondes après extinction manuelle
+            - condition: template
+              value_template: >
+                {{ (as_timestamp(now()) - as_timestamp(states.light.lumieres_cuisines.last_changed)) > 15 }}
+          sequence:
+            - choose:
+                # 1) Mode nuit : 22h30 → 05h30 (veilleuse 10%)
+                - conditions:
+                    - condition: or
+                      conditions:
+                        - condition: time
+                          after: "22:30:00"
+                          before: "23:59:59"
+                        - condition: time
+                          after: "00:00:01"
+                          before: "05:30:00"
+                  sequence:
+                    - service: light.turn_on
+                      target:
+                        entity_id: light.lumieres_cuisines
+                      data:
+                        brightness_pct: 10
+                        transition: 0.5
+
+                # 2) Mode TV (10%)
+                - conditions:
+                    - condition: state
+                      entity_id: input_boolean.mode_tv
+                      state: "on"
+                  sequence:
+                    - service: light.turn_on
+                      target:
+                        entity_id: light.lumieres_cuisines
+                      data:
+                        brightness_pct: 10
+                        transition: 0.5
+
+              # 3) Mode normal la journée (100%)
+              default:
+                - service: light.turn_on
+                  target:
+                    entity_id: light.lumieres_cuisines
+                  data:
+                    brightness_pct: 100
+                    transition: 0.3
+
+        # ---- EXTINCTION (mouvement off) ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.pir3_occupancy
+              state: "off"
+          sequence:
+            - choose:
+                # A) Mode forçage actif : extinction après 15 min d'absence réelle
+                - conditions:
+                    - condition: state
+                      entity_id: input_boolean.cuisine_force
+                      state: "on"
+                  sequence:
+                    - delay: "00:15:00"
+                    # Si toujours pas de présence après le délai, on coupe et on éteint
+                    - condition: state
+                      entity_id: binary_sensor.pir3_occupancy
+                      state: "off"
+                    - service: input_boolean.turn_off
+                      target:
+                        entity_id: input_boolean.cuisine_force
+                    - service: light.turn_off
+                      target:
+                        entity_id: light.lumieres_cuisines
+
+                # B) Mode automatique classique (pas de forçage)
+              default:
+                - choose:
+                    # Mode TV : extinction rapide après 1 min
+                    - conditions:
+                        - condition: state
+                          entity_id: input_boolean.mode_tv
+                          state: "on"
+                      sequence:
+                        - delay: "00:01:00"
+                    # Mode normal : extinction après 10 min
+                  default:
+                    - delay: "00:10:00"
+
+                # Si toujours pas de présence après le délai, on éteint
+                - condition: state
+                  entity_id: binary_sensor.pir3_occupancy
+                  state: "off"
+                - service: light.turn_off
+                  target:
+                    entity_id: light.lumieres_cuisines

@@ -1,0 +1,11 @@
+- id: detachMetF
+  alias: Zi10 detach → toggle lumière enfants
+  triggers:
+  - entity_id: sensor.zi10_action
+    to: toggle
+    trigger: state
+  actions:
+  - target:
+      entity_id: light.amp_chambre_enfant
+    action: light.toggle
+  mode: single

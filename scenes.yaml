@@ -1,0 +1,52 @@
+- id: '1762112488318'
+  name: TV
+  entities:
+    switch.zi4:
+      friendly_name: Zi4 salon
+      state: 'off'
+    automation.lumieres_auto_salon_ms2_zi4:
+      id: lumiere_auto_salone
+      friendly_name: Lumières auto – Salon (MS2→Zi4)
+      last_triggered: '2025-11-02T19:14:55.601491+00:00'
+      mode: restart
+      current: 0
+      state: 'off'
+    switch.sw3:
+      friendly_name: Sw3
+      state: 'off'
+    light.lumieres_cuisines:
+      min_color_temp_kelvin: 2700
+      max_color_temp_kelvin: 6500
+      min_mireds: 153
+      max_mireds: 370
+      effect_list:
+      - 'off'
+      supported_color_modes:
+      - color_temp
+      - hs
+      effect:
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      rgb_color:
+      xy_color:
+      entity_id:
+      - light.amp_cuisine1
+      - light.amp_cuisine2
+      - light.amp_cuisine3
+      icon: mdi:lightbulb-group
+      friendly_name: Lumières Cuisines
+      supported_features: 4
+      state: 'off'
+  icon: mdi:television
+  metadata:
+    switch.zi4:
+      entity_only: true
+    automation.lumieres_auto_salon_ms2_zi4:
+      entity_only: true
+    switch.sw3:
+      entity_only: true
+    light.lumieres_cuisines:
+      entity_only: true

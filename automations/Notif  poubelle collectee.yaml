@@ -1,0 +1,166 @@
+- id: poubelle_afficher_si_collecte
+  alias: Poubelle - Afficher Notification si collecte aujourd'hui
+  description: Rappel poubelle (robuste, multi-évènements)
+  mode: single
+
+  # Déclencheurs : J-1 à 18:00 et Jour J à 08:00
+  trigger:
+    - id: veille
+      trigger: time
+      at: "18:30:00"
+    - id: jourJ
+      trigger: time
+      at: "07:15:00"
+
+  variables:
+    #  Mets à true le temps du debug pour voir les titres récupérés
+    debug_notifications: false
+
+    cal_entity: calendar.famille_briche
+
+    # Fenêtre d'interrogation pour demain (déclenchée J-1 à 18:00)
+    tomorrow_start: "{{ (today_at('00:00') + timedelta(days=1)).isoformat() }}"
+    tomorrow_end:   "{{ (today_at('00:00') + timedelta(days=2)).isoformat() }}"
+
+    # Fenêtre d'interrogation pour aujourd'hui (déclenchée J à 08:00)
+    today_start: "{{ today_at('00:00').isoformat() }}"
+    today_end:   "{{ (today_at('00:00') + timedelta(days=1)).isoformat() }}"
+
+  action:
+    - choose:
+
+        # ===================== BRANCHE J-1 (VEILLE) =====================
+        - conditions: "{{ trigger.id == 'veille' }}"
+          sequence:
+            # Récupère les évènements de demain
+            - action: calendar.get_events
+              target:
+                entity_id: "{{ cal_entity }}"
+              data:
+                start_date_time: "{{ tomorrow_start }}"
+                end_date_time:   "{{ tomorrow_end }}"
+              response_variable: evs
+
+            # Normalise la réponse et teste "poubelle" dans les titres (insensible à la casse)
+            - variables:
+                _raw: "{{ evs.get(cal_entity) }}"
+                events: >-
+                  {% if _raw is mapping and 'events' in _raw %}
+                  {{ _raw['events'] }}
+                  {% elif _raw is sequence %}
+                  {{ _raw }}
+                  {% else %}
+                  {{ [] }}
+                  {% endif %}
+                titles: "{{ events | map(attribute='summary') | select('string') | list }}"
+                haystack: "{{ titles | map('lower') | list | join(' | ') }}"
+                has_collecte: "{{ 'poubelle' in haystack }}"
+
+            # (Optionnel) Notif de debug
+            - if:
+                - condition: template
+                  value_template: "{{ debug_notifications }}"
+              then:
+                - action: persistent_notification.create
+                  data:
+                    title: "Debug Poubelle (veille)"
+                    message: >-
+                      {{ titles | length }} évènement(s) demain.
+                      Titres: {{ titles }}
+                      has_collecte = {{ has_collecte }}
+
+            # Si collecte demain → on allume l'entête
+            - condition: template
+              value_template: "{{ has_collecte }}"
+
+            - action: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.poubelle_dans_1_jour
+
+            - action: persistent_notification.create
+              data:
+                title: "Poubelle"
+                message: "Entête activée (J-1)."
+            - service: notify.notify
+              data:
+                title: "Poubelle"
+                message: "À sortir, collecte demain !"
+
+        # ===================== BRANCHE JOUR J ===========================
+        - conditions: "{{ trigger.id == 'jourJ' }}"
+          sequence:
+            # Récupère les évènements d'aujourd'hui
+            - action: calendar.get_events
+              target:
+                entity_id: "{{ cal_entity }}"
+              data:
+                start_date_time: "{{ today_start }}"
+                end_date_time:   "{{ today_end }}"
+              response_variable: evs
+
+            # Normalise + test sur les titres
+            - variables:
+                _raw: "{{ evs.get(cal_entity) }}"
+                events: >-
+                  {% if _raw is mapping and 'events' in _raw %}
+                  {{ _raw['events'] }}
+                  {% elif _raw is sequence %}
+                  {{ _raw }}
+                  {% else %}
+                  {{ [] }}
+                  {% endif %}
+                titles: "{{ events | map(attribute='summary') | select('string') | list }}"
+                haystack: "{{ titles | map('lower') | list | join(' | ') }}"
+                has_collecte: "{{ 'poubelle' in haystack }}"
+
+            # Continue seulement s'il y a collecte aujourd'hui
+            - condition: template
+              value_template: "{{ has_collecte }}"
+
+            # Même logique : PR1 optionnelle pour alimenter l'ampli, puis annonce Alexa
+            # - choose:
+            #     - conditions:
+            #         - condition: state
+            #           entity_id: switch.pr1
+            #           state: "off"
+            #       sequence:
+            #         - action: switch.turn_on
+            #           target:
+            #             entity_id: switch.pr1
+            #         - delay: "00:00:59"
+            #         - action: notify.alexa_media
+            #           data:
+            #             target:
+            #               - media_player.echo_du_salon
+            #             message: "N'oublie pas de sortir la poubelle !"
+            #             data:
+            #               type: announce
+            #               method: speak
+            #         - delay: "00:02:00"
+            #         - action: switch.turn_off
+            #           target:
+            #             entity_id: switch.pr1
+            #   default:
+            #     - action: notify.alexa_media
+            #       data:
+            #         target:
+            #           - media_player.echo_du_salon
+            #         message: "N'oublie pas de sortir la poubelle !"
+            #         data:
+            #           type: announce
+            #           method: speak
+
+            # Reset de l'entête + confirmation
+            - action: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.poubelle_dans_1_jour
+
+            - action: persistent_notification.create
+              data:
+                title: "Poubelle"
+                message: "Poubelle collectée !"
+
+            # - service: notify.notify
+            #   data:
+            #     title: "Poubelle"
+            #     message: "Poubelle collectée !"

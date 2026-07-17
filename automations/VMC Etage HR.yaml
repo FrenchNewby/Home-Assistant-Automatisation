@@ -1,0 +1,39 @@
+- id: '1760256512382'
+  alias: SDB RdC VMC auto humidité
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.24c9_h
+    above: 87
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+      milliseconds: 0
+    trigger: numeric_state
+  conditions:
+  - condition: state
+    entity_id: switch.z1i
+    state: 'off'
+  - condition: template
+    value_template: '{{ states(''sensor.24c9_h'')|float(0) > 0 }}'
+  actions:
+  - target:
+      entity_id: switch.z1i
+    action: switch.turn_on
+  - wait_for_trigger:
+    - entity_id:
+      - sensor.24c9_h
+      below: 77
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
+        milliseconds: 0
+      trigger: numeric_state
+    timeout: 00:45:00
+    continue_on_timeout: true
+  - target:
+      entity_id: switch.z1i
+    action: switch.turn_off
+  mode: restart

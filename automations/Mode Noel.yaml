@@ -1,0 +1,33 @@
+- id: mode_noel_pr4_pr6
+  alias: Mode Noël – Pilotage PR4 & PR6
+  mode: single
+
+  trigger:
+    - platform: state
+      entity_id: input_boolean.mode_noel
+
+  action:
+    - choose:
+        # ----- MODE NOËL ON -----
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.mode_noel
+              state: "on"
+          sequence:
+            - service: switch.turn_on
+              target:
+                entity_id:
+                  - switch.zpr4
+                  - switch.pr6
+
+        # ----- MODE NOËL OFF -----
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.mode_noel
+              state: "off"
+          sequence:
+            - service: switch.turn_off
+              target:
+                entity_id:
+                  - switch.zpr4
+                  - switch.pr6

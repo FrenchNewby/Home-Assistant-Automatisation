@@ -1,0 +1,15 @@
+# configuration Double Take pour CodeProject.AI (via compatibilité DeepStack)
+mqtt:
+  host: core-mosquitto
+  username: addons
+  password: dei8ji2muZaew8xaiw6ohngaon6eehieN7ahphinohyeengeu9Ra8Iew5ieVeedu
+detectors:
+  deepstack:
+    url: http://0a217ee8-ai.server:5000
+  
+cameras:
+  salon:
+    snapshot:
+      url: http://172.30.32.1:8123/api/camera_proxy/camera.salle_a_manger_salon
+      headers:
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI3YjhhMWFhMzhhZTQ0ZDU3ODNjMzlmNzYwODJkNzAyYSIsImlhdCI6MTc4Mzk0ODQwMiwiZXhwIjoyMDk5MzA4NDAyfQ.Cb1kjxt3UwlHq0GgkiW0RMLItckYivbDZOMtEdzE2WI

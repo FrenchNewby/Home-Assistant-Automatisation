@@ -1,0 +1,76 @@
+- id: trv_bureau_auto_par_pr2
+  alias: Bureau – TRV auto via PR2 (>80W => 21°C ; <10W => 17°C si TTV off)
+  description: >
+    Si la puissance de PR2 dépasse 80W ET que le mode télétravail de Johan est OFF,
+    alors le TRV du bureau passe à 21°C. Quand la puissance repasse sous 10W ET que le
+    mode TTV est OFF, le TRV revient à 17°C.
+  mode: restart
+
+  variables:
+    trv: climate.trv_bureau_johan
+    pwr: sensor.pr2_puissance
+    tt_bool: input_boolean.mode_teletravail_johan
+    high_w: 80
+    low_w: 10
+    temp_on: 21
+    temp_off: 17
+
+  trigger:
+    - id: high
+      platform: numeric_state
+      entity_id: sensor.pr2_puissance
+      above: 80
+    - id: low
+      platform: numeric_state
+      entity_id: sensor.pr2_puissance
+      below: 10
+
+  condition: []
+
+  action:
+    - choose:
+        # ------- Monter à 21°C si >80W et TTV OFF -------
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.id == 'high' }}"
+            - condition: state
+              entity_id: input_boolean.mode_teletravail_johan
+              state: "off"
+          sequence:
+            - condition: template
+              value_template: >
+                {{ state_attr(trv, 'temperature')|float(0) != temp_on }}
+            # On passe en mode manuel
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ trv }}"
+              data:
+                hvac_mode: heat
+
+            - service: climate.set_temperature
+              target:
+                entity_id: "{{ trv }}"
+              data:
+                temperature: "{{ temp_on }}"
+
+        # ------- Redescendre à 17°C si <10W et TTV OFF -------
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.id == 'low' }}"
+            - condition: state
+              entity_id: input_boolean.mode_teletravail_johan
+              state: "off"
+          sequence:
+            - condition: template
+              value_template: >
+                {{ state_attr(trv, 'temperature')|float(0) != temp_off }}
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ trv }}"
+              data:
+                hvac_mode: auto
+            - service: climate.set_temperature
+              target:
+                entity_id: "{{ trv }}"
+              data:
+                temperature: "{{ temp_off }}"

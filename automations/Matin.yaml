@@ -1,0 +1,62 @@
+- id: cafe_matin_volets_radio_une_fois_par_jour
+  alias: Café du matin → Volets + Ampli + France Inter (05h–09h, 1x/jour)
+  description: Dépassement de 300W sur PR2 pendant 1 min = machine à café en route.
+  mode: single
+
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.zpr2_power
+      above: 300
+      for: "00:00:10"
+
+  condition:
+    # Fenêtre horaire
+    - condition: time
+      after: "05:00:00"
+      before: "09:00:00"
+
+    # Une seule fois par jour : vérifie la dernière exécution de CETTE automatisation
+    - condition: template
+      value_template: >
+        {% set lt = state_attr(this.entity_id, 'last_triggered') %}
+        {{ lt is none or as_datetime(lt).date() != now().date() }}
+
+  action:
+    # Ouvrir les volets (déclenche l'automatisation existante)
+    - service: automation.trigger
+      target:
+        entity_id: automation.ouvrir_les_volets
+
+        # Allumer l’ampli (prise PR1)
+    - service: switch.turn_on
+      target:
+        entity_id: switch.pr1
+
+        # (Optionnel) régler le volume de l’Echo
+    - service: media_player.volume_set
+      target:
+        entity_id: media_player.echo_du_salon
+      data:
+        volume_level: 0.8
+    - delay: "00:00:20"
+
+    - service: notify.alexa_media_echo_du_salon
+      data:
+        target:
+          - media_player.echo_du_salon
+        message: Bonjour ! J'espère que tu as bien dormi.
+
+    # Petite phrase du matin
+    - service: media_player.play_media
+      target:
+          entity_id: media_player.echo_du_salon
+      data:  
+        "media_content_id": "Alexa.GoodMorning.Play"
+        "media_content_type": "sequence"
+
+    - service: media_player.play_media
+      target:
+        entity_id: media_player.echo_du_salon
+      data:
+        media_content_id: met france Inter
+        media_content_type: custom

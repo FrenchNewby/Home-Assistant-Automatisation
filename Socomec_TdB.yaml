@@ -1,0 +1,222 @@
+title: Tableau de Bord Socomec Digiware
+views:
+  - title: Mesures Physiques
+    path: mesures_physiques
+    icon: mdi:flash-circle
+    type: sections
+    max_columns: 3
+    sections:
+      # =================================================================
+      # SECTION 1 : ALIMENTATION & RÉSEAU ÉLECTRIQUE (U-30)
+      # =================================================================
+      - type: grid
+        title: Réseau Électrique (U-30)
+        cards:
+          - type: grid
+            square: false
+            columns: 3
+            cards:
+              - type: sensor
+                entity: sensor.socomec_u30_tension_v1
+                name: Tension V1
+                graph: line
+              - type: sensor
+                entity: sensor.socomec_u30_tension_v2
+                name: Tension V2
+                graph: line
+              - type: sensor
+                entity: sensor.socomec_u30_tension_v3
+                name: Tension V3
+                graph: line
+
+          - type: entities
+            entities:
+              - entity: sensor.socomec_u30_tension_simple_systeme
+                name: Tension Simple Moyenne
+                icon: mdi:sine-wave
+              - entity: sensor.socomec_u30_tension_composee_systeme
+                name: Tension Composée Moyenne
+                icon: mdi:sine-wave
+              - entity: sensor.socomec_u30_frequence
+                name: Fréquence Réseau
+                icon: mdi:current-ac
+
+      # =================================================================
+      # SECTION 2 : MODULE S-135 (CHARGES & PUISSANCES)
+      # =================================================================
+      - type: grid
+        title: Centrales S-135 (Départs)
+        cards:
+          # Phase 1
+          - type: entities
+            title: Charge Phase 1 (I1)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_s135_courant_i1
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_s135_puissance_active_p1
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Phase 2
+          - type: entities
+            title: Charge Phase 2 (I2)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_s135_courant_i2
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_s135_puissance_active_p2
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Phase 3
+          - type: entities
+            title: Charge Phase 3 (I3)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_s135_courant_i3
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_s135_puissance_active_p3
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Totaux & Diagnostic S-135
+          - type: entities
+            title: S-135 - Résumé Global
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_s135_courant_systeme
+                name: Courant Système Moyen
+              - entity: sensor.socomec_s135_puissance_active_totale
+                name: Puissance Active Totale
+              - entity: sensor.socomec_s135_puissance_reactive_totale
+                name: Puissance Réactive Totale
+              - entity: sensor.socomec_s135_puissance_apparente_totale
+                name: Puissance Apparente Totale
+              - entity: sensor.socomec_s135_facteur_de_puissance
+                name: Facteur de Puissance (cos φ)
+              - entity: sensor.socomec_s135_energie_active_ea
+                name: Énergie Cumulative Ea+
+
+      # =================================================================
+      # SECTION 3 : MODULE I-35 (1) (CHARGES & PUISSANCES)
+      # =================================================================
+      - type: grid
+        title: Centrales I-35 (1)
+        cards:
+          # Phase 1
+          - type: entities
+            title: Charge Phase 1 (I1)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_i35_courant_i1
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_i35_puissance_active_p1
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Phase 2
+          - type: entities
+            title: Charge Phase 2 (I2)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_i35_courant_i2
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_i35_puissance_active_p2
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Phase 3
+          - type: entities
+            title: Charge Phase 3 (I3)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_i35_courant_i3
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_i35_puissance_active_p3
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Totaux & Diagnostic I-35 (1)
+          - type: entities
+            title: I-35 (1) - Résumé Global
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_i35_courant_systeme
+                name: Courant Système Moyen
+              - entity: sensor.socomec_i35_puissance_active_totale
+                name: Puissance Active Totale
+              - entity: sensor.socomec_i35_puissance_reactive_totale
+                name: Puissance Réactive Totale
+              - entity: sensor.socomec_i35_puissance_apparente_totale
+                name: Puissance Apparente Totale
+              - entity: sensor.socomec_i35_facteur_de_puissance
+                name: Facteur de Puissance (cos φ)
+              - entity: sensor.socomec_i35_energie_active_ea
+                name: Énergie Cumulative Ea+
+
+      # =================================================================
+      # SECTION 4 : MODULE I-35 (2) (CHARGES & PUISSANCES)
+      # =================================================================
+      - type: grid
+        title: Centrales I-35 (2)
+        cards:
+          # Phase 1
+          - type: entities
+            title: Charge Phase 1 (I1)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_i35_2_courant_i1
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_i35_2_puissance_active_p1
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Phase 2
+          - type: entities
+            title: Charge Phase 2 (I2)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_i35_2_courant_i2
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_i35_2_puissance_active_p2
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Phase 3
+          - type: entities
+            title: Charge Phase 3 (I3)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_i35_2_courant_i3
+                name: Courant Instantané
+                icon: mdi:current-ac
+              - entity: sensor.socomec_i35_2_puissance_active_p3
+                name: Puissance Active
+                icon: mdi:lightning-bolt
+
+          # Totaux & Diagnostic I-35 (2)
+          - type: entities
+            title: I-35 (2) - Résumé Global
+            show_header_toggle: false
+            entities:
+              - entity: sensor.socomec_i35_2_courant_systeme
+                name: Courant Système Moyen
+              - entity: sensor.socomec_i35_2_puissance_active_totale
+                name: Puissance Active Totale
+              - entity: sensor.socomec_i35_2_puissance_reactive_totale
+                name: Puissance Réactive Totale
+              - entity: sensor.socomec_i35_2_puissance_apparente_totale
+                name: Puissance Apparente Totale
+              - entity: sensor.socomec_i35_2_facteur_de_puissance
+                name: Facteur de Puissance (cos φ)
+              - entity: sensor.socomec_i35_2_energie_active_ea
+                name: Énergie Cumulative Ea+

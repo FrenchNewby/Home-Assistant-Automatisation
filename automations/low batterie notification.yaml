@@ -1,0 +1,18 @@
+- id: '1759605630464'
+  alias: Low batterie Notification
+  description: ''
+  use_blueprint:
+    path: Blackshome/low-battery-notifications-and-actions.yaml
+    input:
+      time: 08:00:00
+      weekday_options:
+      - tue
+      - wed
+      - thu
+      - fri
+      - sat
+      - sun
+      - mon
+      include_time: time_enabled
+      include_easy_notify: disabled_easy_notify
+      include_persistent_notification: enable_persistent_notification

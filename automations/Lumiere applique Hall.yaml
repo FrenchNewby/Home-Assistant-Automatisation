@@ -1,0 +1,45 @@
+- id: Detection_PRS2_avant_2030
+  alias: Hall RDC (avant 20h30, lux<650 → Zi5)
+  description: Allume Zi5 si présence + lux<650 entre 07:15–20:30. Éteint 10 min après la dernière absence (réarmable) à toute heure.
+  mode: restart
+
+  variables:
+    lux_threshold: 500
+
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.pir2_occupancy
+
+  action:
+    - choose:
+        # ---- ALLUMAGE (présence) : limité à 07:15–20:30 + lux ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.pir2_occupancy
+              state: "on"
+            - condition: template
+              value_template: >
+                {{ (states('sensor.zrain_lux_illuminance') | float(9999)) < lux_threshold }}
+            - condition: time
+              after: "07:15:00"
+              before: "20:30:00"
+          sequence:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.zi5
+
+        # ---- EXTINCTION (absence) : jamais limitée dans le temps ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.pir2_occupancy
+              state: "off"
+          sequence:
+            - delay: "00:10:00"    # réarmable via mode: restart
+            - condition: state
+              entity_id: binary_sensor.pir2_occupancy
+              state: "off"
+            - service: switch.turn_off
+              target:
+                entity_id: switch.zi5
+

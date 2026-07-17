@@ -1,0 +1,56 @@
+- id: lumiere_auto_salon
+  alias: Salon – Lumières auto zPIR6 → switch.switch.sw3)
+  description: >
+    Allume si présence mais pas si mode TV activé
+  mode: restart
+
+  variables:
+    lux_threshold: 500
+    is_dark: >
+      {{ is_state('sun.sun','below_horizon') or (states('sensor.zrain_lux_illuminance')|float(9999)) < lux_threshold }}
+
+
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.zpir6_occupancy
+
+  action:
+    - choose:
+        # ---- ALLUMAGE : présence + sombre + pas mode TV + hors créneau nuit ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.zpir6_occupancy
+              state: "on"
+            - condition: template
+              value_template: "{{ is_dark }}"
+            - condition: state
+              entity_id: input_boolean.mode_tv
+              state: "off"
+            - condition: not
+              conditions:
+                - condition: or
+                  conditions:
+                    - condition: time
+                      after: "22:30:00"
+                    - condition: time
+                      before: "05:30:00"
+          sequence:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.sw3
+
+        # ---- EXTINCTION : toujours autorisée, un seul comportement ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.zpir6_occupancy
+              state: "off"
+          sequence:
+            - delay: "00:15:00"
+
+            - condition: state
+              entity_id: binary_sensor.zpir6_occupancy
+              state: "off"
+
+            - service: switch.turn_off
+              target:
+                entity_id: switch.sw3

@@ -1,0 +1,44 @@
+- id: '1759606341109'
+  alias: Collecte Tri
+  description: ''
+  triggers:
+  - trigger: calendar
+    id: veille
+    entity_id: calendar.famille_briche
+    event: start
+    offset: '-6:0:0'
+  - trigger: calendar
+    id: jourJ
+    entity_id: calendar.famille_briche
+    offset: '+8:0:0'
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ trigger.id == 'veille' and\n   trigger.calendar_event.summary
+          == 'Collecte Tri' }}\n"
+      sequence:
+      - action: input_boolean.turn_on
+        target:
+          entity_id:
+          - input_boolean.tri_dans_1_jour
+        data: {}
+      - action: persistent_notification.create
+        data:
+          title: Tri
+          message: Entête activée (J-1)
+    - conditions:
+      - condition: template
+        value_template: "{{ trigger.id == 'jourJ' and\n   trigger.calendar_event.summary
+          == 'Collecte Tri' }}\n"
+      sequence:
+      - action: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id: input_boolean.tri_dans_1_jour
+      - action: persistent_notification.create
+        data:
+          title: Tri
+          message: Tri collectée !
+  mode: restart

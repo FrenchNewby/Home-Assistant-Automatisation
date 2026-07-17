@@ -1,0 +1,52 @@
+- id: tv_mode_toggle
+  alias: TV – Mode ON/OFF (éteindre lumières + gérer auto)
+  mode: single
+
+  trigger:
+    - platform: state
+      entity_id: input_boolean.mode_tv
+
+  action:
+    - choose:
+        # ---- CAS 1 : Mode TV vient de passer à ON ----
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.mode_tv
+              state: "on"
+          sequence:
+            # 1. Nettoyage du forçage Cuisine (Nouveauté)
+            - service: timer.cancel
+              target:
+                entity_id: timer.timer_cuisine_force
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.cuisine_force
+
+            # 2. Couper l'automatisation de la lumière auto du salon
+            - service: automation.turn_off
+              target:
+                entity_id: automation.lumieres_auto_salon_ms2_zi4
+
+            # 3. Éteindre lumières + prise + cuisine
+            # Note : On garde light.lumieres_cuisines ici pour être sûr qu'elle s'éteigne, 
+            # même si l'extinction du forçage devrait laisser l'auto s'en charger.
+            - service: homeassistant.turn_off
+              target:
+                entity_id:
+                  - light.lumieres_salon
+                  - switch.sw3
+                  - light.lumieres_cuisines
+
+        # ---- CAS 2 : Mode TV vient de passer à OFF ----
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.mode_tv
+              state: "off"
+          sequence:
+            # Réactiver l'automatisation de la lumière auto du salon
+            - service: automation.turn_on
+              target:
+                entity_id: automation.lumieres_auto_salon_ms2_zi4
+
+            # Optionnel : On pourrait ici forcer une ré-évaluation du capteur de la cuisine
+            # pour que la lumière revienne à 10% si quelqu'un y est encore.

@@ -1,0 +1,60 @@
+- id: solar_appliance_alerts
+  alias: "Solaire – Alertes Lancement Appareils"
+  description: >
+    Envoie des notifications d'opportunité d'autoconsommation (mobile, persistent, Alexa)
+    lorsque l'injection dépasse 600W et que les conditions sont propices.
+  mode: single
+
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.puissance_injectee_reseau
+      above: 600
+      for: "00:10:00"
+
+  condition:
+    # Plage horaire propice
+    - condition: time
+      after: "08:00:00"
+      before: "14:00:00"
+
+    # Quelqu'un est à la maison
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.johan_a_la_maison_mix
+          state: "on"
+        - condition: state
+          entity_id: binary_sensor.mami_a_la_maison_mix
+          state: "on"
+
+    # La machine à laver n'est pas déjà en marche
+    - condition: numeric_state
+      entity_id: sensor.pr4_mal_puissance
+      below: 5
+
+    # Une seule fois par jour maximum
+    - condition: template
+      value_template: >
+        {% set lt = state_attr(this.entity_id, 'last_triggered') %}
+        {{ lt is none or as_datetime(lt).date() != now().date() }}
+
+  action:
+    # 1) Notification persistante dans Home Assistant
+    - service: persistent_notification.create
+      data:
+        title: "☀️ Opportunité Solaire !"
+        message: "L'injection solaire dépasse 600W. C'est le moment idéal pour lancer une machine à laver ou un lave-vaisselle."
+        notification_id: solar_appliance_alert
+
+    # 2) Notification mobile pour Johan
+    - service: notify.redmi13_johan
+      data:
+        title: "☀️ Production Solaire élevée"
+        message: "Injection réseau > 600W. Pense à lancer des cycles d'appareils (machine à laver, lave-vaisselle) !"
+
+    # 3) Annonce Alexa dans le salon
+    - service: notify.alexa_media
+      data:
+        target:
+          - media_player.echo_du_salon
+        message: "Le soleil brille fort ! L'injection solaire dépasse 600 watts. C'est le moment idéal pour lancer une machine à laver ou un lave-vaisselle."

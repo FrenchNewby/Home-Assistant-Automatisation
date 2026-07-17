@@ -1,0 +1,305 @@
+confirmable_notification:
+  alias: Confirmable Notification
+  use_blueprint:
+    path: homeassistant/confirmable_notification.yaml
+    input:
+      notify_device: 36618cac176bf67d04924684203eed21
+      title: Test Confirmarble Notification
+      message: 'est-ce que ca marche ? '
+  description: ''
+annonce_accueil_pn_notif_alexa_musique:
+  alias: annonce_acceuil
+  mode: queued
+  fields:
+    who:
+      description: Prénom de la personne
+      example: Johan
+    alexa:
+      description: media_player Alexa cible
+      example: media_player.echo_du_salon
+    pr1:
+      description: Prise ampli (switch)
+      example: switch.pr1
+    message:
+      description: Texte d'accueil
+      example: Bienvenue à la maison, Johan !
+    music_id:
+      description: 'Identifiant DEEZER (ex: playlist)'
+      example: Musique Douce
+  sequence:
+  - data:
+      title: "👋 Accueil"
+      message: '{{ message }}'
+      notification_id: accueil_{{ who | lower }}
+    action: persistent_notification.create
+  - data:
+      title: Accueil
+      message: '{{ message }}'
+    action: notify.notify
+  - target:
+      entity_id: '{{ pr1 }}'
+    action: switch.turn_on
+  - target:
+      entity_id: '{{ alexa }}'
+    data:
+      volume_level: 0.8
+    action: media_player.volume_set
+  - delay: 00:00:45
+  - target:
+      entity_id: '{{ alexa }}'
+    data:
+      media:
+        media_content_id: amzn_sfx_doorbell_chime_01
+        media_content_type: sound
+        metadata: {}
+    action: media_player.play_media
+  - data:
+      target:
+      - '{{ alexa }}'
+      message: '{{ message }}'
+      data:
+        type: announce
+        method: speak
+    action: notify.alexa_media
+  - target:
+      entity_id: '{{ alexa }}'
+    data:
+      media:
+        media_content_id: '{{ music_id }}'
+        media_content_type: DEEZER
+        metadata: {}
+    action: media_player.play_media
+  description: ''
+alexa_notify_announce:
+  alias: Alexa - Notify/Announce
+  mode: parallel
+  max: 20
+  fields:
+    targets:
+      name: Cible(s) Echo / Groupe
+      description: 'Selectionne 1+ media_player Alexa ou un groupe (ex: media_player.partout)'
+      selector:
+        target:
+          entity:
+            domain: media_player
+    message:
+      name: Message
+      description: Texte a dire (SSML possible si coche)
+      default: ''
+      selector:
+        text:
+    announce:
+      name: Mode annonce (avec carillon)
+      description: Sinon TTS simple
+      default: false
+      selector:
+        boolean:
+    ssml:
+      name: Utiliser SSML
+      description: Entoure automatiquement le message avec <speak>…</speak>
+      default: false
+      selector:
+        boolean:
+    volume:
+      name: Volume (0.0–1.0)
+      default: ''
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+          mode: slider
+    soundbank:
+      name: Son (soundbank://...)
+      description: 'Ex: soundbank://soundlibrary/alarms/beeps_and_bloops/bell_01'
+      default: ''
+      selector:
+        text:
+    music_search:
+      name: Rechercher de la musique
+      description: 'Ex: Daft Punk Random Access Memories'
+      default: ''
+      selector:
+        text:
+    music_provider:
+      name: Fournisseur musique
+      default: Amazon Music
+      selector:
+        select:
+          options:
+          - Amazon Music
+          - Spotify
+          - Deezer
+          - Apple Music
+          - TuneIn
+    media_url:
+      name: URL audio directe (MP3/stream)
+      description: 'Ex: https://...'
+      default: ''
+      selector:
+        text:
+    pre_delay:
+      name: Delai avant (ms)
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 5000
+          step: 100
+    post_delay:
+      name: Delai après (ms)
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: 100
+  sequence:
+  - variables:
+      _targets: >-
+        {% set t = targets if targets is not none else [] %}
+        {% set ids = t.entity_id if t is mapping and 'entity_id' in t else t %}
+        {% if ids is string %}
+          {{ [ids] }}
+        {% elif ids is sequence %}
+          {{ ids | list }}
+        {% else %}
+          []
+        {% endif %}
+      _msg: "{% set m = message | default('', true) %} {% if ssml and m|length > 0
+        %}
+  <speak>{{ m }}</speak>
+{% else %}
+  {{ m }}
+{% endif %}"
+      _type: '{{ ''announce'' if announce else ''tts'' }}'
+      _has_msg: '{{ (message | default('''', true)) | length > 0 }}'
+      _has_sound: '{{ (soundbank | default('''', true)) | length > 0 }}'
+      _has_url: '{{ (media_url | default('''', true)) | length > 0 }}'
+      _has_music_search: '{{ (music_search | default('''', true)) | length > 0 }}'
+  - if:
+    - condition: template
+      value_template: '{{ volume is not string and volume != '''' }}'
+    then:
+    - repeat:
+        for_each: '{{ _targets }}'
+        sequence:
+        - target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            volume_level: '{{ volume | float(0.4) }}'
+          action: media_player.volume_set
+        - delay:
+            milliseconds: 200
+  - delay:
+      milliseconds: '{{ pre_delay | int(0) }}'
+  - if:
+    - condition: template
+      value_template: '{{ _has_sound }}'
+    then:
+    - repeat:
+        for_each: '{{ _targets }}'
+        sequence:
+        - target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            media_content_id: '{{ soundbank }}'
+            media_content_type: sound
+          action: media_player.play_media
+        - delay:
+            milliseconds: 300
+  - if:
+    - condition: template
+      value_template: '{{ _has_msg }}'
+    then:
+    - data:
+        target: '{{ _targets if _targets|length > 0 else ''partout'' }}'
+        message: '{{ _msg }}'
+        data:
+          type: '{{ _type }}'
+          method: speak
+      action: notify.alexa_media
+  - if:
+    - condition: template
+      value_template: '{{ _has_url }}'
+    then:
+    - repeat:
+        for_each: '{{ _targets }}'
+        sequence:
+        - target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            media_content_id: '{{ media_url }}'
+            media_content_type: music
+          action: media_player.play_media
+  - if:
+    - condition: template
+      value_template: '{{ _has_music_search }}'
+    then:
+    - variables:
+        _payload: '{{ {''type'': ''music'', ''search'': music_search, ''provider'':
+          music_provider} | tojson }}'
+    - repeat:
+        for_each: '{{ _targets }}'
+        sequence:
+        - target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            media_content_id: '{{ _payload }}'
+            media_content_type: custom
+          action: media_player.play_media
+  - delay:
+      milliseconds: '{{ post_delay | int(0) }}'
+  description: ''
+
+play_music_multiroom:
+  alias: "Lecteur – Jouer la musique sélectionnée"
+  sequence:
+    - variables:
+        musique: "{{ states('input_select.choix_musique') }}"
+        echo_entity: >-
+          {% set name = states('input_select.choix_echo') | trim %}
+          {% if name == 'Salon' %}media_player.echo_du_salon
+          {% elif name == 'Salle de Bain' %}media_player.echo_de_la_salle_de_bain
+          {% elif name == 'Martin' %}media_player.echo_pop_briche
+          {% elif name == 'Flora' %}media_player.echo_dot_sdb
+          {% elif name == 'Parents' %}media_player.echo_dot_briche
+          {% elif name == 'Partout' %}media_player.partout
+          {% endif %}
+    - variables:
+        command: >-
+          {% if '(Deezer)' in musique %}
+            {% set search = musique.replace(' (Deezer)', '') | trim %}
+            {% if search == 'Ma Musique' %}
+              Joue ma musique sur Deezer
+            {% elif 'playlist' in search | lower %}
+              Joue la {{ search | lower }} sur Deezer
+            {% else %}
+              Joue {{ search }} sur Deezer
+            {% endif %}
+          {% else %}
+            Joue la radio {{ musique | trim }}
+          {% endif %}
+    - service: media_player.play_media
+      target:
+        entity_id: "{{ echo_entity | trim }}"
+      data:
+        media_content_type: "custom"
+        media_content_id: "{{ command | trim }}"
+
+stop_music_multiroom:
+  alias: "Lecteur – Arrêter la musique"
+  sequence:
+    - variables:
+        echo_entity: >-
+          {% set name = states('input_select.choix_echo') | trim %}
+          {% if name == 'Salon' %}media_player.echo_du_salon
+          {% elif name == 'Salle de Bain' %}media_player.echo_de_la_salle_de_bain
+          {% elif name == 'Martin' %}media_player.echo_pop_briche
+          {% elif name == 'Flora' %}media_player.echo_dot_sdb
+          {% elif name == 'Parents' %}media_player.echo_dot_briche
+          {% elif name == 'Partout' %}media_player.partout
+          {% endif %}
+    - service: media_player.media_stop
+      target:
+        entity_id: "{{ echo_entity | trim }}"

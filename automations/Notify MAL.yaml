@@ -1,0 +1,79 @@
+- id: Notify MAL
+  alias: 'MAL – Fin de cycle : rappels (après vrai démarrage)'
+  description: >
+    Démarre UNIQUEMENT si la machine a vraiment tourné (pic >200W pendant 5min).
+    À la fin du cycle (puissance <2W pendant 10min), envoie des rappels toutes 30min
+    jusqu'à l'ouverture de la porte (arrêt immédiat à l'ouverture).
+  mode: restart
+
+  trigger:
+    - id: started
+      platform: numeric_state
+      entity_id: sensor.pr4_mal_puissance
+      above: 200
+      for: '00:05:00'
+
+  action:
+    # 1) Attendre la vraie fin de cycle
+    - wait_for_trigger:
+        - platform: numeric_state
+          entity_id: sensor.pr4_mal_puissance
+          below: 8
+          for: '00:10:00'
+      timeout: '03:00:00'
+      continue_on_timeout: false
+
+    # 2) Si la porte est déjà ouverte, on s'arrête net (aucun rappel)
+    - condition: state
+      entity_id: binary_sensor.porte_mal_contact
+      state: 'off'      # 'off' = fermée (classique HA : on = ouverte)
+
+    # 3) Boucle de rappels: toutes les 30min SAUF si la porte s'ouvre avant
+    - repeat:
+        until:
+          - condition: state
+            entity_id: binary_sensor.porte_mal_contact
+            state: 'on'   # on = ouverte
+        sequence:
+          # Attendre l'ouverture OU 30 min
+          - wait_for_trigger:
+              - platform: state
+                entity_id: binary_sensor.porte_mal_contact
+                to: 'on'
+            timeout: '00:30:00'
+            continue_on_timeout: true
+
+          # Si la porte s'est ouverte pendant l'attente, NE PAS notifier (on reboucle, 'until' stoppera)
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ wait.completed }}"
+                sequence: []
+
+          # Sinon (timeout), envoyer les rappels
+          - service: persistent_notification.create
+            data:
+              title: "⚠️ Alerte Fin MAL"
+              message: "La machine a fini son cycle, pense à la vider."
+              notification_id: MAL_fini
+
+          - service: notify.notify
+            data:
+              title: "Machine à laver – Fin de cycle"
+              message: "À vider !"
+
+          - service: notify.alexa_media
+            data:
+              target:
+                - media_player.echo_de_la_salle_de_bain
+                - media_player.echo_du_salon
+                - media_player.echo_dot_briche
+              message: La machine a lavé a terminée ! Il faut la vider.
+
+
+
+
+    # 4) Nettoyage de la notification si elle existe
+    - service: persistent_notification.dismiss
+      data:
+        notification_id: MAL_fini

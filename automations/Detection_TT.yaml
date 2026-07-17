@@ -1,0 +1,273 @@
+- id: "1758975380830"
+  alias: Detection_TT
+  description: Détection télétravail Johan/Mami via PC
+  mode: restart
+
+  trigger:
+    # Johan
+    - id: arrive_johan
+      platform: state
+      entity_id: device_tracker.frlap27920
+      to: home
+      for: "00:00:10"
+    - id: leave_johan
+      platform: state
+      entity_id: device_tracker.frlap27920
+      to: not_home
+      for: "00:00:10"
+
+    # Mami (PC)
+    - id: arrive_mami
+      platform: state
+      entity_id: device_tracker.socopc_mami
+      to: home
+      for: "00:00:10"
+    - id: leave_mami
+      platform: state
+      entity_id: device_tracker.socopc_mami
+      to: not_home
+      for: "00:00:10"
+
+  action:
+    # --- Calcule "invite_today" (events du jour) ---
+    - variables:
+        cal_entity: calendar.famille_briche
+        today_start: "{{ today_at('00:00').isoformat() }}"
+        today_end: "{{ (today_at('00:00') + timedelta(days=1)).isoformat() }}"
+
+    - service: calendar.get_events
+      target:
+        entity_id: "{{ cal_entity }}"
+      data:
+        start_date_time: "{{ today_start }}"
+        end_date_time: "{{ today_end }}"
+      response_variable: evs
+
+    - variables:
+        _raw: "{{ evs.get(cal_entity) if evs is mapping else evs }}"
+        events: >-
+          {% if _raw is mapping and 'events' in _raw %}{{ _raw['events'] }}
+          {% elif _raw is sequence %}{{ _raw }}
+          {% else %}{{ [] }}{% endif %}
+        titles: "{{ events | map(attribute='summary') | select('defined') | list }}"
+        haystack: "{{ titles | map('lower') | join(' | ') }}"
+        invite_today: "{{ 'invit' in haystack }}"  # couvre invité / invités / invitation…
+
+    - choose:
+        # --- Johan arrive ---
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.id == 'arrive_johan' }}"
+          sequence:
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.thermostat_hc1
+              data:
+                temperature: 20
+
+            - service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.mode_teletravail_johan
+
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.trv_bureau_johan
+              data:
+                hvac_mode: heat
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.trv_bureau_johan
+              data:
+                temperature: 20
+
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.trv_parent
+              data:
+                hvac_mode: heat
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.trv_parent
+              data:
+                temperature: 20
+
+        # --- Johan part ---
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.id == 'leave_johan' }}"
+          sequence:
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.mode_teletravail_johan
+
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.trv_bureau_johan
+              data:
+                hvac_mode: auto
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.trv_bureau_johan
+              data:
+                temperature: 18
+
+            - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: input_boolean.mode_teletravail_mami
+                      state: "on"
+                  sequence:
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.trv_parent
+                      data:
+                        hvac_mode: heat
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.trv_parent
+                      data:
+                        temperature: 20
+              default:
+                - service: climate.set_hvac_mode
+                  target:
+                    entity_id: climate.trv_parent
+                  data:
+                    hvac_mode: auto
+                - service: climate.set_temperature
+                  target:
+                    entity_id: climate.trv_parent
+                  data:
+                    temperature: 18
+
+                - choose:
+                    - conditions:
+                        - condition: time
+                          before: "15:00:00"
+                        - condition: state
+                          entity_id:
+                            - input_boolean.mode_teletravail_johan
+                            - input_boolean.mode_teletravail_mami
+                          state: "off"
+                      sequence:
+                        - service: climate.set_temperature
+                          target:
+                            entity_id: climate.thermostat_hc1
+                          data:
+                            temperature: 19
+
+        # --- Mami arrive (PC détecté à la maison) ---
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.id == 'arrive_mami' }}"
+          sequence:
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.thermostat_hc1
+              data:
+                temperature: 20.5
+
+            - service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.mode_teletravail_mami
+
+            # >>> NE PAS TOUCHER la TRV bureau mami si "invité" aujourd'hui
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ not invite_today }}"
+                  sequence:
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.trv_bureau_mami
+                      data:
+                        hvac_mode: heat
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.trv_bureau_mami
+                      data:
+                        temperature: 20.5
+
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.trv_parent
+              data:
+                hvac_mode: heat
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.trv_parent
+              data:
+                temperature: 20
+
+        # --- Mami part (PC absent) ---
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.id == 'leave_mami' }}"
+          sequence:
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.mode_teletravail_mami
+
+            # >>> NE PAS TOUCHER la TRV bureau mami si "invité" aujourd'hui
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ not invite_today }}"
+                  sequence:
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.trv_bureau_mami
+                      data:
+                        hvac_mode: auto
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.trv_bureau_mami
+                      data:
+                        temperature: 18
+
+            - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: input_boolean.mode_teletravail_johan
+                      state: "on"
+                  sequence:
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.trv_parent
+                      data:
+                        hvac_mode: heat
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.trv_parent
+                      data:
+                        temperature: 19
+              default:
+                - service: climate.set_hvac_mode
+                  target:
+                    entity_id: climate.trv_parent
+                  data:
+                    hvac_mode: auto
+                - service: climate.set_temperature
+                  target:
+                    entity_id: climate.trv_parent
+                  data:
+                    temperature: 18
+
+                - choose:
+                    - conditions:
+                        - condition: state
+                          entity_id:
+                            - input_boolean.mode_teletravail_johan
+                            - input_boolean.mode_teletravail_mami
+                          state: "off"
+                        - condition: or
+                          conditions:
+                            - condition: time
+                              before: "14:00:00"
+                            - condition: time
+                              after: "19:30:00"
+                      sequence:
+                        - service: climate.set_temperature
+                          target:
+                            entity_id: climate.thermostat_hc1
+                          data:
+                            temperature: 18

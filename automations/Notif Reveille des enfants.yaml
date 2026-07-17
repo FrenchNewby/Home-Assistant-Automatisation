@@ -1,0 +1,89 @@
+- id: reveil_enfants
+  alias: "Réveil enfants – Alexa + lumière progressive"
+  mode: single
+
+  trigger:
+    - id: lumiere
+      platform: time
+      at: "06:45:00"
+    - id: reveil
+      platform: time
+      at: "06:50:00"
+
+  condition:
+    # Semaine uniquement
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+
+  action:
+    # --- Récup events du jour (calendrier famille) ---
+    - variables:
+        cal_entity: calendar.famille_briche
+        today_start: "{{ today_at('00:00').isoformat() }}"
+        today_end: "{{ (today_at('00:00') + timedelta(days=1)).isoformat() }}"
+
+    - service: calendar.get_events
+      target:
+        entity_id: "{{ cal_entity }}"
+      data:
+        start_date_time: "{{ today_start }}"
+        end_date_time: "{{ today_end }}"
+      response_variable: evs
+
+    - variables:
+        _raw: "{{ evs.get(cal_entity) if evs is mapping else evs }}"
+        events: >-
+          {% if _raw is mapping and 'events' in _raw %}{{ _raw['events'] }}
+          {% elif _raw is sequence %}{{ _raw }}
+          {% else %}{{ [] }}{% endif %}
+        titles: "{{ events | map(attribute='summary') | select('defined') | list }}"
+        haystack: "{{ titles | map('lower') | join(' | ') }}"
+        vacances_today: "{{ 'vacanc' in haystack }}"   # vacance / vacances
+        tts_ok: "{{ not vacances_today }}"
+
+    # --- Si Vacances => on ne fait rien ---
+    - condition: template
+      value_template: "{{ tts_ok }}"
+
+    - choose:
+        # --------- 06:45 → lumière progressive (sur 5 min) ---------
+        - conditions: "{{ trigger.id == 'lumiere' }}"
+          sequence:
+            - service: light.turn_on
+              target:
+                entity_id: light.amp_chambre_enfant
+              data:
+                brightness: 255
+                color_temp: 370
+                transition: 300  # 06:45 → 06:50
+
+        # --------- 06:50 → réveil Alexa ---------
+        - conditions: "{{ trigger.id == 'reveil' }}"
+          sequence:
+            - service: media_player.volume_set
+              target:
+                entity_id: media_player.echo_pop_briche
+              data:
+                volume_level: 0.4
+
+            - delay: "00:00:30"
+
+            - service: notify.alexa_media
+              data:
+                target:
+                  - media_player.echo_pop_briche
+                message: >
+                  Bonjour Flora, Bonjour Martin, c'est l'heure de se réveiller,
+                  j'espère que vous avez bien dormi. Allez, petit déjeuner !
+
+            - service: media_player.play_media
+              target:
+                entity_id: media_player.echo_pop_briche
+              data:
+                media_content_id: joue une musique relaxante
+                media_content_type: custom

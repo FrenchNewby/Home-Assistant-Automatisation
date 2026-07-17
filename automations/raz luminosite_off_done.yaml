@@ -1,0 +1,9 @@
+- id: reset_luminosite_off_done
+  alias: Réinitialisation quotidienne de luminosité_off_done
+  trigger:
+    - platform: time
+      at: "00:00:00"
+  action:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.luminosite_off_done

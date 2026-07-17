@@ -1,0 +1,39 @@
+- id: cuisine_zi7_force
+  alias: Cuisine – Zi7 (toggle + forçage 100%)
+  description: >
+    Interrupteur de la cuisine. Le premier appui force la lumière à 100% (le forçage est auto-libéré après 15 min d'absence).
+    Le deuxième appui éteint immédiatement la lumière et lance la période de grâce de 15s.
+  mode: restart
+
+  trigger:
+    - platform: state
+      entity_id: sensor.zi7_action
+      to: "toggle"
+
+  action:
+    - choose:
+        # Si déjà en forçage → éteint immédiatement (déclenche la période de grâce temporelle)
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.cuisine_force
+              state: "on"
+          sequence:
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.cuisine_force
+            - service: light.turn_off
+              target:
+                entity_id: light.lumieres_cuisines
+
+        # Sinon → allume à 100% et active le forçage
+      default:
+        - service: light.turn_on
+          target:
+            entity_id: light.lumieres_cuisines
+          data:
+            brightness_pct: 100
+            transition: 0.3
+
+        - service: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.cuisine_force

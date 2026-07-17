@@ -1,0 +1,60 @@
+- id: trv_chambre_ami_invite
+  alias: "TRV Chambre Ami – Invité (Google Calendar)"
+  mode: single
+  description: >
+    Chauffe la TRV uniquement si un événement du jour contient "invit" dans le calendrier.
+
+  trigger:
+    - platform: time
+      at: "06:00:00"
+    - platform: time
+      at: "20:30:00"
+
+  variables:
+    trv: climate.trv_bureau_mami
+    cal_entity: calendar.famille_briche
+    today_start: "{{ today_at('00:00').isoformat() }}"
+    today_end: "{{ (today_at('00:00') + timedelta(days=1)).isoformat() }}"
+    t: "{{ now().strftime('%H:%M') }}"
+
+  action:
+    - service: calendar.get_events
+      target:
+        entity_id: "{{ cal_entity }}"
+      data:
+        start_date_time: "{{ today_start }}"
+        end_date_time: "{{ today_end }}"
+      response_variable: evs
+
+    - variables:
+        _raw: "{{ evs.get(cal_entity) if evs is mapping else evs }}"
+        events: >-
+          {% if _raw is mapping and 'events' in _raw %}{{ _raw['events'] }}
+          {% elif _raw is sequence %}{{ _raw }}
+          {% else %}{{ [] }}{% endif %}
+        titles: "{{ events | map(attribute='summary') | select('defined') | list }}"
+        haystack: "{{ titles | map('lower') | join(' | ') }}"
+        invite: "{{ 'invit' in haystack }}"
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ invite and t == '06:00' }}"
+          sequence:
+            - service: climate.set_hvac_mode
+              target: { entity_id: "{{ trv }}" }
+              data: { hvac_mode: "heat" }
+            - service: climate.set_temperature
+              target: { entity_id: "{{ trv }}" }
+              data: { temperature: 20 }
+
+        - conditions:
+            - condition: template
+              value_template: "{{ invite and t == '20:30' }}"
+          sequence:
+            - service: climate.set_hvac_mode
+              target: { entity_id: "{{ trv }}" }
+              data: { hvac_mode: "heat" }
+            - service: climate.set_temperature
+              target: { entity_id: "{{ trv }}" }
+              data: { temperature: 18 }
+

@@ -1,0 +1,153 @@
+- id: solar_ac_optimization
+  alias: "Solaire – Optimisation Climatisation (ESP-CLIM)"
+  description: >
+    Pilote la climatisation du salon en mode refroidissement ou chauffage selon le surplus
+    solaire (>500W) et la température intérieure (>23°C pour refroidir, <19°C pour chauffer),
+    indépendamment de la présence. Gère de façon progressive ("analogique") la vitesse de
+    ventilation (Silencieux, 20%, 40%, 60%, 80%, 100%, Turbo) selon le surplus réseau disponible.
+  mode: restart
+  trigger:
+    # 1) Déclenchement initial du boost solaire (>500W)
+    - platform: numeric_state
+      entity_id: sensor.puissance_injectee_reseau
+      above: 500
+      for: "00:15:00"
+      id: start_solar_ac
+    # 2) Arrêt complet du boost solaire
+    - platform: numeric_state
+      entity_id: sensor.puissance_injectee_reseau
+      below: 50
+      for: "00:10:00"
+      id: stop_solar_ac
+    # 3) Augmentation progressive de la ventilation (analogique)
+    - platform: numeric_state
+      entity_id: sensor.puissance_injectee_reseau
+      above: 200
+      for: "00:03:00"
+      id: increase_fan
+    # 4) Réduction progressive de la ventilation (analogique)
+    - platform: numeric_state
+      entity_id: sensor.puissance_injectee_reseau
+      below: 20
+      for: "00:02:00"
+      id: decrease_fan
+  condition: [] # Pas de restriction de présence (indépendant)
+  action:
+    - choose:
+        # --- DÉMARRAGE DU BOOST SOLAIRE CLIM ---
+        - conditions:
+            - condition: trigger
+              id: start_solar_ac
+          sequence:
+            - choose:
+                # Mode climatisation (Été) : s'il fait chaud dehors (>22°C) ET chaud dedans (>23°C)
+                - conditions:
+                    - condition: template
+                      value_template: "{{ states('sensor.ems_esp_boiler_outdoortemp') | regex_replace('[^0-9.-]', '') | float(0) > 22.0 }}"
+                    - condition: template
+                      value_template: "{{ state_attr('climate.espclim_mqtt_climate', 'current_temperature') | float(0) > 23.0 }}"
+                  sequence:
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.espclim_mqtt_climate
+                      data:
+                        hvac_mode: "cool"
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.espclim_mqtt_climate
+                      data:
+                        temperature: 21
+                    - service: select.select_option
+                      target:
+                        entity_id: select.espclim_mqtt_fan
+                      data:
+                        option: "Silencieux"
+                # Mode chauffage (Hiver/Mi-saison) : s'il fait froid dehors (<15°C) ET froid dedans (<19°C)
+                - conditions:
+                    - condition: template
+                      value_template: "{{ states('sensor.ems_esp_boiler_outdoortemp') | regex_replace('[^0-9.-]', '') | float(0) < 15.0 }}"
+                    - condition: template
+                      value_template: "{{ state_attr('climate.espclim_mqtt_climate', 'current_temperature') | float(0) < 19.0 }}"
+                  sequence:
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.espclim_mqtt_climate
+                      data:
+                        hvac_mode: "heat"
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.espclim_mqtt_climate
+                      data:
+                        temperature: 22
+                    - service: select.select_option
+                      target:
+                        entity_id: select.espclim_mqtt_fan
+                      data:
+                        option: "Silencieux"
+        # --- ARRÊT DU BOOST SOLAIRE CLIM ---
+        - conditions:
+            - condition: trigger
+              id: stop_solar_ac
+          sequence:
+            # On éteint uniquement si la clim est toujours en consigne solaire
+            - condition: template
+              value_template: >
+                {{ 
+                  (is_state('climate.espclim_mqtt_climate', 'cool'))
+                  or (is_state('climate.espclim_mqtt_climate', 'heat'))
+                }}
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.espclim_mqtt_climate
+              data:
+                hvac_mode: "off"
+        # --- AUGMENTATION PROGRESSIVE DE LA VENTILATION ---
+        - conditions:
+            - condition: trigger
+              id: increase_fan
+            # Vérifie qu'on est en consigne solaire
+            - condition: template
+              value_template: >
+                {{ 
+                  (is_state('climate.espclim_mqtt_climate', 'cool'))
+                  or (is_state('climate.espclim_mqtt_climate', 'heat'))
+                }}
+            # Vérifie que la ventilation n'est pas déjà au max (Turbo)
+            - condition: template
+              value_template: "{{ states('select.espclim_mqtt_fan') != 'Turbo' }}"
+          sequence:
+            - service: select.select_option
+              target:
+                entity_id: select.espclim_mqtt_fan
+              data:
+                option: >
+                  {% set speeds = ['Silencieux', '20%', '40%', '60%', '80%', '100%', 'Turbo'] %}
+                  {% set current = states('select.espclim_mqtt_fan') %}
+                  {% set idx = speeds.index(current) if current in speeds else 0 %}
+                  {% set next_idx = [idx + 1, 6] | min %}
+                  {{ speeds[next_idx] }}
+        # --- RÉDUCTION PROGRESSIVE DE LA VENTILATION ---
+        - conditions:
+            - condition: trigger
+              id: decrease_fan
+            # Vérifie qu'on est en consigne solaire
+            - condition: template
+              value_template: >
+                {{ 
+                  (is_state('climate.espclim_mqtt_climate', 'cool'))
+                  or (is_state('climate.espclim_mqtt_climate', 'heat'))
+                }}
+            # Vérifie que la ventilation n'est pas déjà au minimum (Silencieux)
+            - condition: template
+              value_template: "{{ states('select.espclim_mqtt_fan') != 'Silencieux' }}"
+          sequence:
+            - service: select.select_option
+              target:
+                entity_id: select.espclim_mqtt_fan
+              data:
+                option: >
+                  {% set speeds = ['Silencieux', '20%', '40%', '60%', '80%', '100%', 'Turbo'] %}
+                  {% set current = states('select.espclim_mqtt_fan') %}
+                  {% set idx = speeds.index(current) if current in speeds else 0 %}
+                  {% set prev_idx = [idx - 1, 0] | max %}
+                  {{ speeds[prev_idx] }}

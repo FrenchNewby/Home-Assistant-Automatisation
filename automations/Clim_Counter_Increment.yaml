@@ -1,0 +1,13 @@
+- id: clim_counter_increment
+  alias: "Clim – Incrémenter compteur total"
+  description: Incrémente le compteur de démarrages à chaque fois que la Clim s'allume
+  mode: single
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.clim_active
+      from: "off"
+      to: "on"
+  action:
+    - service: counter.increment
+      target:
+        entity_id: counter.total_clim_starts

@@ -1,0 +1,75 @@
+- id: Detection_PRS1_v2
+  alias: "Présence Hall : Gestion intelligente Jour/Nuit"
+  mode: restart
+  description: >
+    Gère Zi6_l1 (Jour) et PR3 (Nuit) avec gestion de l'obscurité.
+    Nettoie l'état opposé pour n'avoir qu'une source active.
+
+  variables:
+    lux_threshold: 350
+    # On ajoute une sécurité si le capteur MS1 est indisponible
+    is_dark: >
+      {{ is_state('sun.sun','below_horizon') or (states('sensor.ms1_illuminance')|float(0)) < lux_threshold }}
+
+  trigger:
+    - id: pir_on
+      platform: state
+      entity_id:
+        - binary_sensor.ms1_presence
+        - binary_sensor.pir1_occupancy
+      to: "on"
+    - id: clear_5min
+      platform: state
+      entity_id: binary_sensor.presence_hall_etage
+      to: "off"
+      for: "00:05:00"
+
+  action:
+    - choose:
+        # ---------- ALLUMAGE ----------
+        - conditions:
+            - condition: trigger
+              id: pir_on
+            - condition: template
+              value_template: "{{ is_dark }}"
+          sequence:
+            - choose:
+                # 1) JOUR (09:00 - 20:30)
+                - conditions:
+                    - condition: time
+                      after: "09:00:00"
+                      before: "20:30:00"
+                  sequence:
+                    - service: switch.turn_on
+                      target:
+                        entity_id: switch.zi6_l1
+                    - service: switch.turn_off
+                      target:
+                        entity_id: switch.zpr1 # On éteint l'autre au cas où
+
+                # 2) NUIT (20:30 - 09:00)
+                - conditions:
+                    - condition: or
+                      conditions:
+                        - condition: time
+                          after: "20:30:00"
+                        - condition: time
+                          before: "09:00:00"
+                  sequence:
+                    - service: switch.turn_on
+                      target:
+                        entity_id: switch.zpr1
+                    - service: switch.turn_off
+                      target:
+                        entity_id: switch.zi6_l1 # On éteint l'autre au cas où
+
+        # ---------- EXTINCTION ----------
+        - conditions:
+            - condition: trigger
+              id: clear_5min
+          sequence:
+            - service: switch.turn_off
+              target:
+                entity_id:
+                  - switch.zpr1
+                  - switch.zi6_l1

@@ -1,0 +1,516 @@
+{
+    "0xa4c138da8076b4d5": {
+        "presence": false,
+        "motion_state": "none",
+        "illuminance": 1955,
+        "static_detection_distance": 5.3,
+        "fading_time": 10,
+        "static_detection_sensitivity": 5,
+        "indicator": "OFF",
+        "motion_detection_mode": "only_pir",
+        "motion_detection_sensitivity": 5,
+        "battery": 75,
+        "linkquality": 102
+    },
+    "0xa4c138035f66ce8c": {
+        "state": "OFF",
+        "countdown": 0,
+        "power_on_behavior": "off",
+        "switch_type": "toggle",
+        "linkquality": 21,
+        "power_outage_memory": "off"
+    },
+    "0xa4c1387a7f9718c1": {
+        "state": "OFF",
+        "countdown": 0,
+        "power_on_behavior": "off",
+        "switch_type": "toggle",
+        "linkquality": 112
+    },
+    "0xa4c138f7aeb02076": {
+        "running_state": "idle",
+        "current_heating_setpoint": 17,
+        "local_temperature": 28,
+        "child_lock": "UNLOCK",
+        "schedule_monday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 18:00/21.0 22:00/16.0",
+        "schedule_tuesday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 18:00/16.0 22:00/16.0",
+        "schedule_wednesday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 18:00/16.0 22:00/16.0",
+        "schedule_thursday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 18:00/16.0 22:00/16.0",
+        "schedule_friday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 18:00/16.0 22:00/16.0",
+        "schedule_saturday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 18:00/16.0 22:00/16.0",
+        "schedule_sunday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 18:00/16.0 22:00/16.0",
+        "battery_low": false,
+        "frost_protection": "OFF",
+        "linkquality": 61,
+        "system_mode": "off",
+        "scale_protection": "OFF",
+        "local_temperature_calibration": 4
+    },
+    "0xa4c138766164f1ec": {
+        "state": "OFF",
+        "countdown": 0,
+        "power_on_behavior": "off",
+        "switch_type": "toggle",
+        "linkquality": 54
+    },
+    "0xa4c138f789385900": {
+        "system_mode": "off",
+        "running_state": "idle",
+        "current_heating_setpoint": 17,
+        "local_temperature": 26,
+        "child_lock": "UNLOCK",
+        "schedule_monday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 17:30/18.0 21:00/16.0",
+        "schedule_tuesday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 17:30/18.0 21:00/16.0",
+        "schedule_wednesday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 17:30/18.0 21:00/16.0",
+        "schedule_thursday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 17:30/18.0 21:00/16.0",
+        "schedule_friday": "06:00/16.0 08:00/16.0 12:00/16.0 14:00/16.0 17:30/18.0 21:00/16.0",
+        "schedule_saturday": "06:00/17.0 08:00/18.0 12:00/18.0 14:00/18.0 17:30/18.0 21:00/16.0",
+        "schedule_sunday": "06:00/17.0 08:00/18.0 12:00/18.0 14:00/18.0 17:30/18.0 21:00/16.0",
+        "battery_low": false,
+        "frost_protection": "OFF",
+        "scale_protection": "OFF",
+        "local_temperature_calibration": 3,
+        "linkquality": 112
+    },
+    "0xa4c13870695cdeac": {
+        "state_l1": "OFF",
+        "countdown_l1": 0,
+        "power_on_behavior_l1": "off",
+        "switch_type": "toggle",
+        "state_l2": "OFF",
+        "countdown_l2": 0,
+        "linkquality": 54
+    },
+    "0xa4c1389a5ded3a65": {
+        "voltage": 3000,
+        "battery": 100,
+        "contact": true,
+        "tamper": false,
+        "battery_low": false,
+        "linkquality": 76
+    },
+    "0xa4c138ec9bf8a273": {
+        "battery": 80,
+        "voltage": 2700,
+        "occupancy": false,
+        "tamper": false,
+        "battery_low": false,
+        "linkquality": 72
+    },
+    "0xa4c13867b491bf58": {
+        "motion_state": "none",
+        "illuminance": 2639,
+        "presence": false,
+        "static_detection_distance": 5,
+        "fading_time": 10,
+        "static_detection_sensitivity": 5,
+        "indicator": "ON",
+        "motion_detection_mode": "only_pir",
+        "motion_detection_sensitivity": 8,
+        "battery": 100,
+        "linkquality": 76
+    },
+    "0xa4c1384c581c3f34": {
+        "battery": 90,
+        "voltage": 2900,
+        "occupancy": false,
+        "tamper": false,
+        "battery_low": false,
+        "linkquality": 105
+    },
+    "0xa4c13818973ee8e7": {
+        "voltage": 2800,
+        "battery": 100,
+        "linkquality": 80,
+        "contact": true,
+        "tamper": false,
+        "battery_low": false
+    },
+    "0xa4c138a011a07d5a": {
+        "energy": 0.48,
+        "voltage": 233,
+        "state": "OFF",
+        "countdown": 0,
+        "power_outage_memory": "off",
+        "indicator_mode": "on",
+        "child_lock": "UNLOCK",
+        "power": 0,
+        "current": 0,
+        "linkquality": 138,
+        "update": {
+            "state": "available"
+        },
+        "switch_type_button": "release"
+    },
+    "0xa4c1382c7ac9854b": {
+        "battery": 40,
+        "voltage": 2500,
+        "temperature": 25.1,
+        "humidity": 44.8,
+        "linkquality": 127,
+        "update": {
+            "state": "idle",
+            "installed_version": 268645895,
+            "latest_version": 268645895,
+            "latest_source": null,
+            "latest_release_notes": null
+        }
+    },
+    "0x7cc6b6fffecb1c0a": {
+        "network_indicator": false,
+        "turbo_mode": false,
+        "delayed_power_on_state": true,
+        "delayed_power_on_time": 0.5,
+        "detach_relay_mode": true,
+        "external_trigger_mode": "edge",
+        "linkquality": 54,
+        "state": "ON",
+        "power_on_behavior": "on",
+        "update": {
+            "state": "idle",
+            "installed_version": 4104,
+            "latest_version": 4104,
+            "latest_source": "https://raw.githubusercontent.com/Koenkk/zigbee-OTA/master/images/Sonoff/zbminir2_v1.0.8.ota",
+            "latest_release_notes": null
+        }
+    },
+    "0xa4c138e26a0f4091": {
+        "state": "OFF",
+        "power_on_behavior": "previous",
+        "switch_type": "toggle",
+        "countdown": 0,
+        "linkquality": 153
+    },
+    "0xa4c1386a65d9b164": {
+        "battery": 100,
+        "voltage": 3000,
+        "temperature": 26.85,
+        "humidity": 49.65,
+        "linkquality": 76,
+        "update": {
+            "state": "available"
+        }
+    },
+    "0xa4c13846de5abe36": {
+        "battery": 100,
+        "voltage": 3000,
+        "occupancy": false,
+        "tamper": false,
+        "battery_low": false,
+        "linkquality": 98
+    },
+    "0xa4c138fa694e7d75": {
+        "voltage": 233,
+        "state": "ON",
+        "child_lock": "UNLOCK",
+        "indicator_mode": "on",
+        "power_outage_memory": "on",
+        "power": 0,
+        "countdown": 0,
+        "energy": 17.9,
+        "current": 0,
+        "linkquality": 43,
+        "update": {
+            "state": "idle",
+            "installed_version": 268449287,
+            "latest_version": 268449287,
+            "latest_source": null,
+            "latest_release_notes": null
+        }
+    },
+    "0xa4c138c9c7c55942": {
+        "local_temperature": 27,
+        "system_mode": "heat",
+        "frost_protection": "OFF",
+        "scale_protection": "OFF",
+        "current_heating_setpoint": 20,
+        "pi_heating_demand": 0,
+        "running_state": "idle",
+        "child_lock": "UNLOCK",
+        "local_temperature_calibration": 1,
+        "linkquality": 80,
+        "schedule_monday": "06:00/21.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_tuesday": "06:00/21.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_wednesday": "06:00/21.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_thursday": "06:00/21.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_friday": "06:00/21.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_saturday": "06:30/21.0 07:30/21.0 12:00/20.0 13:30/20.0 16:45/20.0 20:30/17.0",
+        "schedule_sunday": "06:30/21.0 07:30/20.0 12:00/20.0 13:30/20.0 16:45/20.0 20:30/17.0"
+    },
+    "0xa4c13811d94e55f2": {
+        "system_mode": "heat",
+        "current_heating_setpoint": 20,
+        "local_temperature": 25,
+        "linkquality": 94,
+        "pi_heating_demand": 0,
+        "running_state": "idle",
+        "local_temperature_calibration": 0,
+        "schedule_monday": "06:00/20.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_tuesday": "06:00/20.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_wednesday": "06:00/20.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_thursday": "06:00/20.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_friday": "06:00/20.0 07:30/17.0 12:00/17.0 13:30/17.0 16:45/20.0 20:30/17.0",
+        "schedule_saturday": "06:30/21.0 07:30/21.0 12:00/20.0 13:30/20.0 16:45/21.0 20:30/17.0",
+        "schedule_sunday": "06:30/20.0 07:30/20.0 12:00/20.0 13:30/20.0 16:45/21.0 20:30/17.0",
+        "child_lock": "LOCK",
+        "frost_protection": "OFF",
+        "scale_protection": "OFF"
+    },
+    "0xc890a81f16020000": {
+        "state": "ON",
+        "color_mode": "color_temp",
+        "brightness": 253,
+        "color": {
+            "saturation": 82,
+            "hue": 32,
+            "h": 32,
+            "s": 82
+        },
+        "color_temp": 370,
+        "linkquality": 0
+    },
+    "0xa4c138cbf28c3bbc": {
+        "state": "OFF",
+        "brightness": 3,
+        "linkquality": 80,
+        "level_config": {
+            "on_level": "previous"
+        },
+        "color_mode": "color_temp",
+        "color_temp": 422,
+        "color": {
+            "hue": 113,
+            "h": 113
+        }
+    },
+    "0xa4c1389eaf601dfe": {
+        "state": "OFF",
+        "brightness": 3,
+        "linkquality": 80,
+        "level_config": {
+            "on_level": "previous"
+        },
+        "color_mode": "color_temp",
+        "color_temp": 422,
+        "color": {
+            "x": 0.489,
+            "y": 0.4149,
+            "hue": 29,
+            "saturation": 89,
+            "h": 29,
+            "s": 89
+        },
+        "do_not_disturb": false
+    },
+    "0xa4c138db81beaf3f": {
+        "state": "OFF",
+        "brightness": 3,
+        "linkquality": 80,
+        "color_temp": 422,
+        "color_mode": "color_temp",
+        "color": {
+            "x": 0.489,
+            "y": 0.4149,
+            "hue": 29,
+            "saturation": 89,
+            "h": 29,
+            "s": 89
+        },
+        "level_config": {
+            "on_level": "previous"
+        }
+    },
+    "0x00be44fffe6e07dd": {
+        "network_indicator": true,
+        "turbo_mode": false,
+        "delayed_power_on_state": false,
+        "delayed_power_on_time": 20.5,
+        "detach_relay_mode": true,
+        "external_trigger_mode": "edge",
+        "linkquality": 80,
+        "state": "ON",
+        "power_on_behavior": "on",
+        "update": {
+            "state": "idle",
+            "installed_version": 4104,
+            "latest_version": 4104,
+            "latest_source": "https://raw.githubusercontent.com/Koenkk/zigbee-OTA/master/images/Sonoff/zbminir2_v1.0.8.ota",
+            "latest_release_notes": null
+        }
+    },
+    "0xa4c13872cbd0bb42": {
+        "rainwater": "none",
+        "sensitivity": 5,
+        "illuminance_sampling": 2,
+        "battery": 100,
+        "illuminance": 2771,
+        "linkquality": 72
+    },
+    "0xa4c138c48c893fa0": {
+        "operation_mode": "command",
+        "battery": 100,
+        "voltage": 2900,
+        "linkquality": 80
+    },
+    "0xa4c13811b3610f7b": {
+        "operation_mode": "event",
+        "battery": 100,
+        "voltage": 2900,
+        "linkquality": 80
+    },
+    "0xa4c13817b4ab4798": {
+        "color_mode": "color_temp",
+        "color_temp": 454,
+        "linkquality": 51,
+        "state": "ON",
+        "brightness": 26,
+        "color": {
+            "x": 0.5056,
+            "y": 0.4152,
+            "hue": 27,
+            "saturation": 92,
+            "h": 27,
+            "s": 92
+        }
+    },
+    "0xa4c138eb098473a5": {
+        "linkquality": 72,
+        "state": "OFF",
+        "brightness": 26,
+        "color_temp": 370,
+        "color_mode": "color_temp",
+        "color": {
+            "x": 0.4599,
+            "y": 0.4106,
+            "hue": 32,
+            "saturation": 82,
+            "h": 32,
+            "s": 82
+        }
+    },
+    "0xa4c138b2acc56fd4": {
+        "state": "OFF",
+        "linkquality": 72,
+        "color_mode": "color_temp",
+        "color_temp": 500,
+        "brightness": 2,
+        "color": {
+            "x": 0.5267,
+            "y": 0.4133,
+            "hue": 25,
+            "saturation": 95,
+            "h": 25,
+            "s": 95
+        }
+    },
+    "0xa4c13823d2e93cf6": {
+        "occupancy": false,
+        "tamper": false,
+        "battery_low": false,
+        "battery": 100,
+        "voltage": 3000,
+        "linkquality": 25
+    },
+    "0xa4c138c11c3913ad": {
+        "battery": 100,
+        "voltage": 3000,
+        "temperature": 27.37,
+        "humidity": 48.03,
+        "linkquality": 138,
+        "update": {
+            "state": "available"
+        }
+    },
+    "0xa4c13881e7bc1d16": {
+        "battery": 100,
+        "voltage": 2700,
+        "linkquality": 87,
+        "operation_mode": "event"
+    },
+    "0xa4c138c78e46f5e9": {
+        "linkquality": 105
+    },
+    "0xa4c138710e4769c9": {
+        "temperature_unit": "celsius",
+        "temperature": 24.7,
+        "humidity": 61,
+        "battery_state": "high",
+        "linkquality": 54
+    },
+    "0x8c8b48fffe67b093": {
+        "network_indicator": true,
+        "turbo_mode": false,
+        "delayed_power_on_state": false,
+        "delayed_power_on_time": 3463,
+        "detach_relay_mode": true,
+        "external_trigger_mode": "edge",
+        "state": "OFF",
+        "linkquality": 69,
+        "power_on_behavior": "on",
+        "inching_control_set": {},
+        "update": {
+            "state": "idle",
+            "installed_version": 4104,
+            "latest_version": 4104,
+            "latest_source": "https://raw.githubusercontent.com/Koenkk/zigbee-OTA/master/images/Sonoff/zbminir2_v1.0.8.ota",
+            "latest_release_notes": null
+        }
+    },
+    "0xa4c13828cb4fdffd": {
+        "battery": 70,
+        "voltage": 2700,
+        "occupancy": false,
+        "tamper": false,
+        "battery_low": false,
+        "linkquality": 80
+    },
+    "0xa4c1381c71366822": {
+        "state": "OFF",
+        "child_lock": "UNLOCK",
+        "indicator_mode": "on",
+        "power_outage_memory": "off",
+        "power": 0,
+        "countdown": 0,
+        "voltage": 232,
+        "energy": 1.22,
+        "current": 0,
+        "linkquality": 58,
+        "update": {
+            "state": "idle",
+            "installed_version": 268449287,
+            "latest_version": 268449287,
+            "latest_source": null,
+            "latest_release_notes": null
+        }
+    },
+    "0xa4c1381450cdd10d": {
+        "temperature": 26.4,
+        "humidity": 52,
+        "linkquality": 120,
+        "battery": 100,
+        "voltage": 3100,
+        "update": {
+            "state": "available"
+        }
+    },
+    "0xa4c1386df296cb31": {
+        "battery": 100,
+        "voltage": 2900,
+        "keep_time": 30,
+        "sensitivity": "medium",
+        "occupancy": false,
+        "tamper": false,
+        "battery_low": false,
+        "linkquality": 76
+    },
+    "0xa4c1384ad02eaac6": {
+        "battery": 100,
+        "voltage": 2900,
+        "keep_time": 30,
+        "sensitivity": "medium",
+        "occupancy": false,
+        "tamper": false,
+        "battery_low": false,
+        "linkquality": 58
+    }
+}

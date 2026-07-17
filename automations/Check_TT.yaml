@@ -1,0 +1,96 @@
+- id: '1860280114499'
+  alias: Check_TT
+  description: Vérifie TT Johan/Mami à 09h15 et ajuste chauffage central + TRV.
+  triggers:
+    - trigger: time
+      at: '09:15:00'
+
+  # Exécution uniquement jours ouvrés, sans CONGE ni jour férié
+  conditions:
+    - condition: template
+      #Weekday : 0:lundi, 1:Mardi, ...
+      value_template: >
+        {% set wd = now().weekday() in [0,1,2,3,4] %}
+        {% set conge = is_state('calendar.famille_briche','on') and (state_attr('calendar.famille_briche','message')|default('')|lower == 'conge') %}
+        {% set ferie = is_state('calendar.jours_feries_france','on') %}
+        {{ wd and not conge and not ferie }}
+
+  actions:
+    # Variables: on considère TT si input_boolean ON OU device_tracker à home
+    - variables:
+        j_tt: >
+          {{ is_state('input_boolean.mode_teletravail_johan','on') or is_state('device_tracker.frlap27920','home') }}
+        m_tt: >
+          {{ is_state('input_boolean.mode_teletravail_mami','on') or is_state('device_tracker.socopc_mami','home') }}
+
+    # Chauffage central : 20.5°C si quelqu'un est en TT, sinon 18.5°C
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ j_tt or m_tt }}"
+          sequence:
+#            - service: select.select_option
+#              target:
+#                entity_id: select.ems_esp_thermostat_hc1_mode
+#              data:
+#                option: jour
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.thermostat_hc1
+              data:
+                temperature: 20.5
+      default:
+        - service: climate.set_temperature
+          target:
+            entity_id: climate.thermostat_hc1
+          data:
+            temperature: 18.5
+
+    # TRV Johan : HEAT + 21°C si TT, sinon AUTO (planning TRV)
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ j_tt }}"
+          sequence:
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.trv_bureau_johan
+              data:
+                hvac_mode: "heat"
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.trv_bureau_johan
+              data:
+                temperature: 21
+      default:
+        - service: climate.set_hvac_mode
+          target:
+            entity_id: climate.trv_bureau_johan
+          data:
+            hvac_mode: "auto"
+
+    # TRV Mami : HEAT + 21°C si TT, sinon AUTO (planning TRV)
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ m_tt }}"
+          sequence:
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.trv_bureau_mami
+              data:
+                hvac_mode: "heat"
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.trv_bureau_mami
+              data:
+                temperature: 21
+      default:
+        - service: climate.set_hvac_mode
+          target:
+            entity_id: climate.trv_bureau_mami
+          data:
+            hvac_mode: "auto"
+
+  mode: single
+

@@ -1,0 +1,131 @@
+- id: bioclimatic_shutters
+  alias: "Volets – Gestion Bioclimatique (Protection Chaleur)"
+  description: >
+    Gère l'ouverture et l'ombrage des volets roulants selon la position du soleil (Est le matin,
+    Ouest l'après-midi) et les prévisions météo du jour (active si température max prévue > 23°C).
+    S'adapte aux capacités des moteurs (position pour le Hall, tout-ou-rien pour les autres). Respecte le Mode TV.
+  mode: restart
+  trigger:
+    - platform: time_pattern
+      minutes: "/15"
+  condition:
+    # Fenêtre horaire d'activité bioclimatique (ne pas ouvrir la nuit ou trop tôt/tard)
+    - condition: time
+      after: "06:30:00"
+      before: "19:30:00"
+  action:
+    # 1) Récupérer la prévision météo quotidienne auprès du service météo
+    - service: weather.get_forecasts
+      target:
+        entity_id: weather.maison
+      data:
+        type: daily
+      response_variable: forecast_data
+    - variables:
+        # Extraction de la prévision du jour (index 0) de manière sécurisée
+        today_forecast: >
+          {{ forecast_data['weather.maison'].forecast[0] 
+             if forecast_data['weather.maison'] is defined 
+             and forecast_data['weather.maison'].forecast is defined 
+             else none }}
+        
+        # Température max prévue pour aujourd'hui
+        forecast_max_temp: >
+          {{ today_forecast.temperature | float(0) 
+             if today_forecast is not none 
+             else states('sensor.ems_esp_boiler_outdoortemp') | regex_replace('[^0-9.-]', '') | float(24.0) }}
+             
+        # Condition météo prévue pour aujourd'hui
+        forecast_condition: >
+          {{ today_forecast.condition if today_forecast is not none else 'sunny' }}
+        # Activation : active si la journée s'annonce chaude (> 23°C prévus)
+        is_hot_day_announced: >
+          {{ forecast_max_temp > 27.0 and forecast_condition not in ['rainy', 'pouring', 'snowy', 'hail'] }}
+        # Position du soleil
+        azimuth: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
+        elevation: "{{ state_attr('sun.sun', 'elevation') | float(0) }}"
+        # Volets Est (sans position -> Tout ou rien)
+        east_covers:
+          - cover.volet_cuisine
+          - cover.volet_sam
+        # Volets Ouest (sans position)
+        west_covers_binary:
+          - cover.vl1
+          - cover.volet_balcon
+    - choose:
+        # ==========================================
+        # CAS A : Journée chaude annoncée (bioclimatique active)
+        # ==========================================
+        - conditions:
+            - condition: template
+              value_template: "{{ is_hot_day_announced }}"
+          sequence:
+            # --- GESTION CÔTÉ EST (Cuisine + SaM) ---
+            # Pas de retour d'état de position 0-100% -> fermeture complète
+            - choose:
+                # Soleil directement sur les fenêtres Est (matin)
+                - conditions:
+                    - condition: template
+                      value_template: "{{ 45 <= azimuth < 150 and elevation > 10 }}"
+                  sequence:
+                    - service: cover.close_cover
+                      target:
+                        entity_id: "{{ east_covers }}"
+                # Le soleil n'est plus sur l'Est (après-midi/soir)
+              default:
+                - service: cover.open_cover
+                  target:
+                    entity_id: "{{ east_covers }}"
+            # --- GESTION CÔTÉ OUEST (Salon + Hall) ---
+            - choose:
+                # Soleil directement sur les fenêtres Ouest (après-midi)
+                - conditions:
+                    - condition: template
+                      value_template: "{{ 170 <= azimuth < 310 and elevation > 10 }}"
+                  sequence:
+                    # Volet du Hall (gère la position 0-100% -> Ombrage partiel à 20%)
+                    - service: cover.set_cover_position
+                      target:
+                        entity_id: cover.hall_rdc_volet_hall
+                      data:
+                        position: 20
+                    # Volets du Salon (sans position -> Fermeture complète)
+                    - service: cover.close_cover
+                      target:
+                        entity_id: "{{ west_covers_binary }}"
+                # Le soleil n'est pas encore sur l'Ouest (matin)
+              default:
+                # Ouvre le hall (avec position)
+                - service: cover.open_cover
+                  target:
+                    entity_id: cover.hall_rdc_volet_hall
+                # Ouvre le salon uniquement si le Mode TV est inactif
+                - choose:
+                    - conditions:
+                        - condition: state
+                          entity_id: input_boolean.mode_tv
+                          state: "off"
+                      sequence:
+                        - service: cover.open_cover
+                          target:
+                            entity_id: "{{ west_covers_binary }}"
+        # ==========================================
+        # CAS B : Journée fraîche ou pluvieuse annoncée (laisser ouvert)
+        # ==========================================
+      default:
+        # On ouvre tous les volets sauf ceux du salon si le Mode TV est actif
+        - service: cover.open_cover
+          target:
+            entity_id:
+              - cover.volet_cuisine
+              - cover.volet_sam
+              - cover.hall_rdc_volet_hall
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.mode_tv
+                  state: "off"
+              sequence:
+                - service: cover.open_cover
+                  target:
+                    entity_id: "{{ west_covers_binary }}"

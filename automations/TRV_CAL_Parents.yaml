@@ -1,0 +1,9 @@
+- id: '1762679040310'
+  alias: CAL TRV Parents
+  description: ''
+  use_blueprint:
+    path: rotilho/trv_calibrator.yaml
+    input:
+      trv: climate.trv_parent
+      temperature_sensor: sensor.zth03_temperature
+      trv_calibration_number: number.trv_parent_local_temperature_calibration

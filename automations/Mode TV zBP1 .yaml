@@ -1,0 +1,15 @@
+- id: bp_Mode TV
+  alias: BP Mode TV
+  mode: single
+
+  trigger:
+    - platform: state
+      entity_id: sensor.zbp1_action
+      to: "single"      # adapte en fonction de ce que tu as vu: "single", "double", "hold", etc.
+
+  condition: []
+
+  action:
+    - service: input_boolean.toggle
+      target:
+        entity_id: input_boolean.mode_tv

@@ -1,0 +1,1399 @@
+views:
+- title: Home
+  header:
+    card:
+      type: horizontal-stack
+      cards:
+      - type: markdown
+        content: '{% set cond = states(''weather.maison'') %} {% set temp_now = state_attr(''weather.maison'',
+          ''temperature'') %} ## Bonjour {{ user }}  {% set jours = ["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
+          %} {% set aujourd = now() %}  {{ jours[aujourd.weekday()] }},    {{ now().strftime(''%d
+          %B %Y'') }} - S{{aujourd.isocalendar()[1] }}
+
+
+          '
+    layout: responsive
+    badges_position: top
+    badges_wrap: scroll
+  sections:
+  - type: grid
+    cards:
+    - type: heading
+      heading_style: title
+      heading: Chauffage
+      icon: mdi:fire
+      badges:
+      - type: entity
+        entity: sensor.double_clamp_meter_puissance_b
+    - graph: line
+      type: sensor
+      detail: 1
+      entity: sensor.ems_esp_boiler_outdoortemp
+      name: T°C Ext.
+    - graph: line
+      type: sensor
+      entity: sensor.ems_esp_thermostat_hc1_currtemp
+      detail: 1
+      name: T°C RDC
+    - type: tile
+      grid_options:
+        columns: 12
+        rows: 2
+      entity: climate.thermostat_hc1
+      name: Thermostat Chaudière
+      icon: mdi:fire
+      color: red
+      show_entity_picture: false
+      hide_state: false
+      vertical: false
+      features:
+      - type: target-temperature
+      - type: climate-hvac-modes
+      features_position: bottom
+    column_span: 1
+  - type: grid
+    cards:
+    - type: heading
+      heading: Energie
+      heading_style: title
+      icon: mdi:power-plug
+    - graph: line
+      type: sensor
+      entity: sensor.double_clamp_meter_puissance_a
+      detail: 1
+      name: Electricité Inst.
+    - type: sensor
+      entity: sensor.electricite_consommee_aujourd_hui
+      name: Électricité aujd.
+      graph: line
+    - type: sensor
+      entity: sensor.gaz_consomme_aujourd_hui
+      name: Gaz aujd.
+      icon: mdi:fire
+      graph: line
+    - type: statistic
+      entity: sensor.energie_ecs_kwh
+      period:
+        calendar:
+          period: day
+      stat_type: change
+      name: ECS Aujd.
+      icon: mdi:fire
+    - type: custom:mushroom-chips-card
+      chips:
+      - type: template
+        entity: sensor.pr4_mal_energy
+        icon: mdi:washing-machine
+        icon_color: '{% set p = states(''sensor.pr4_mal_puissance'')|float(0) %} {%
+          if p > 100 %} red {% elif p > 10 %} amber {% else %} white {% endif %}
+
+          '
+        content: '{{ states(''sensor.pr4_mal_puissance'') }} {{ state_attr(''sensor.pr4_mal_puissance'',''unit_of_measurement'')
+          or ''kWh'' }}
+
+          '
+        tap_action:
+          action: more-info
+      - type: template
+        entity: sensor.pr1_puissance
+        icon: mdi:audio-video
+        icon_color: '{% set p = states(''sensor.pr1_puissance'')|float(0) %} {% if
+          p > 100 %} red {% elif p > 10 %} amber {% else %} white {% endif %}
+
+          '
+        content: '{{ states(''sensor.pr1_puissance'') }} {{ state_attr(''sensor.pr1_puissance'',''unit_of_measurement'')
+          or ''W'' }}
+
+          '
+        tap_action:
+          action: more-info
+      - type: template
+        entity: sensor.double_clamp_meter_puissance_b
+        icon: mdi:snowflake
+        icon_color: '{% set p = states(''sensor.double_clamp_meter_puissance_b'')|float(0)
+          %} {% if p > 600 %} red {% elif p > 300 %} amber {% else %} white {% endif
+          %}
+
+          '
+        content: '{{ states(''sensor.double_clamp_meter_puissance_b'') }} {{ state_attr(''sensor.double_clamp_meter_puissance_b'',''unit_of_measurement'')
+          or ''W'' }}
+
+          '
+        tap_action:
+          action: more-info
+      - type: template
+        entity: sensor.pr2_puissance
+        tap_action:
+          action: more-info
+        icon: mdi:laptop
+        icon_color: '{% set p = states(''sensor.pr2_puissance'')|float(0) %} {% if
+          p > 200 %} red {% elif p > 100 %} amber {% else %} white {% endif %}
+
+          '
+        content: '{{ states(''sensor.pr2_puissance'') }} {{ state_attr(''sensor.pr2_puissance'',''unit_of_measurement'')
+          or ''W'' }}
+
+          '
+  - type: grid
+    cards:
+    - type: heading
+      heading: Centrales Socomec
+      heading_style: title
+      icon: mdi:meter-electric-outline
+    - type: heading
+      heading: Module S-135 (Charges)
+      heading_style: subtitle
+      icon: mdi:target
+    - type: grid
+      square: false
+      columns: 3
+      cards:
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_s135_puissance_active_p1
+        name: Phase 1
+        icon: mdi:power-plug
+        icon_color: blue
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_s135_puissance_active_p2
+        name: Phase 2
+        icon: mdi:power-plug
+        icon_color: green
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_s135_puissance_active_p3
+        name: Phase 3
+        icon: mdi:power-plug
+        icon_color: orange
+    - type: heading
+      heading: Module I-35 (1)
+      heading_style: subtitle
+      icon: mdi:power
+    - type: grid
+      square: false
+      columns: 3
+      cards:
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_i35_puissance_active_p1
+        name: Phase 1
+        icon: mdi:power-plug
+        icon_color: blue
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_i35_puissance_active_p2
+        name: Phase 2
+        icon: mdi:power-plug
+        icon_color: green
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_i35_puissance_active_p3
+        name: Phase 3
+        icon: mdi:power-plug
+        icon_color: orange
+    - type: heading
+      heading: Module I-35 (2)
+      heading_style: subtitle
+      icon: mdi:power
+    - type: grid
+      square: false
+      columns: 3
+      cards:
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_i35_2_puissance_active_p1
+        name: Phase 1
+        icon: mdi:power-plug
+        icon_color: blue
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_i35_2_puissance_active_p2
+        name: Phase 2
+        icon: mdi:power-plug
+        icon_color: green
+      - type: custom:mushroom-entity-card
+        entity: sensor.socomec_i35_2_puissance_active_p3
+        name: Phase 3
+        icon: mdi:power-plug
+        icon_color: orange
+  - type: grid
+    cards:
+    - type: heading
+      heading: Today
+      heading_style: title
+      icon: mdi:sun-thermometer
+      badges:
+      - type: entity
+        show_state: true
+        show_icon: true
+        entity: weather.maison
+        state_content:
+        - temperature
+        - state
+      - type: entity
+        entity: sensor.zrain_lux_illuminance
+    - clock_style: digital
+      clock_size: medium
+      show_seconds: true
+      no_background: false
+      type: clock
+      grid_options:
+        columns: 12
+        rows: 1
+    - type: custom:atomic-calendar-revive
+      entities:
+      - entity: calendar.famille_briche
+      card_mod:
+        style: ".single-event-container {\n  /* élargit la colonne \"date\" (gauche)\
+          \ */\n  grid-template-columns: 1fr 3fr !important;  /* défaut ≈ 0.5fr 2fr\
+          \ */\n}\n/* et empêche la césure */\n.single-event-container .event-left\
+          \ {\n  white-space: nowrap !important;\n}\n"
+      maxEventCount: 4
+      maxDaysToShow: 7
+      compactMode: false
+      showMonth: true
+      showHours: false
+      showLocation: true
+      showCurrentEventLine: true
+      showProgressBar: true
+      showRelativeTime: false
+      hideFinishedEvents: true
+      name: Calendrier Famille BRICHE
+      style: ".cal-date {\n  font-size: 14px;\n  white-space: nowrap;\n}\n"
+    - type: conditional
+      conditions:
+      - entity: input_boolean.poubelle_dans_1_jour
+        state: 'on'
+      card:
+        type: heading
+        heading_style: subtitle
+        icon: mdi:trash-can
+        heading: 'Collecte Poubelle demain ! '
+        card_mod:
+          style: ".content {\n  color: orange !important;\n  font-weight: bold;\n\
+            }\n"
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: input_boolean.tri_dans_1_jour
+        state: 'on'
+      card:
+        type: heading
+        heading_style: subtitle
+        icon: mdi:trash-can
+        heading: 'Collecte Tri demain ! '
+        card_mod:
+          style: ".content {\n  color: orange !important;\n  font-weight: bold;\n\
+            }\n"
+  - type: grid
+    cards:
+    - type: heading
+      heading: Famille
+      heading_style: title
+      icon: mdi:account-group
+    - type: custom:mushroom-template-card
+      entity: person.mami
+      primary: Mami
+      secondary: "{% set lvl = states('sensor.sm_s901b_battery_level')|int(0) %} {%\
+        \ set place = states('person.mami') %} {% set charging = (states('sensor.sm_s901b_battery_state')\
+        \ in ['charging','charging_ac','charging_usb'])\n                   or is_state('binary_sensor.sm_s901b_is_charging','on')\
+        \ %}\n{{ 'Maison' if place == 'home' else place }} — {{ lvl }}%{{ ' (⚡)' if\
+        \ charging else '' }}\n"
+      picture: '{{ state_attr(''person.mami'',''entity_picture'') }}'
+      icon: "{% set n = states('sensor.sm_s901b_battery_level')|int(0) %} {% set charging\
+        \ = (states('sensor.sm_s901b_battery_state') in ['charging','charging_ac','charging_usb'])\n\
+        \                   or is_state('binary_sensor.sm_s901b_is_charging','on')\
+        \ %}\n{% set step = ((n/10)|int)*10 %} {% if charging %}\n  mdi:battery-charging-{{\
+        \ step if step>0 else 10 }}\n{% else %}\n  {% if n >= 100 %} mdi:battery\n\
+        \  {% elif n <= 5 %} mdi:battery-outline\n  {% else %} mdi:battery-{{ step\
+        \ if step>0 else 10 }}\n  {% endif %}\n{% endif %}\n"
+      badge_icon: "{% set charging = (states('sensor.sm_s901b_battery_level') in ['charging','charging_ac','charging_usb'])\n\
+        \                   or is_state('binary_sensor.sm_s901b_is_charging','on')\
+        \ %}\n{{ 'mdi:flash' if charging else 'mdi:battery' }}\n"
+      badge_color: '{% set n = states(''sensor.sm_s901b_battery_level'')|int(0) %}
+        {% if n >= 60 %} green {% elif n >= 20 %} orange {% else %} red {% endif %}
+
+        '
+      features_position: bottom
+      multiline_secondary: false
+      grid_options:
+        columns: 6
+        rows: 1
+      icon_tap_action:
+        action: navigate
+        navigation_path: ''
+    - type: custom:mushroom-template-card
+      entity: person.johan
+      primary: Johan
+      secondary: "{% set lvl = states('sensor.redmi13_johan_battery_level')|int(0)\
+        \ %} {% set place = states('person.johan') %} {% set charging = (states('sensor.redmi13_johan_battery_state')\
+        \ in ['charging','charging_ac','charging_usb'])\n                   or is_state('binary_sensor.redmi13_johan_is_charging','on')\
+        \ %}\n{{ 'Maison' if place == 'home' else place }} — {{ lvl }}%{{ ' (⚡)' if\
+        \ charging else '' }}\n"
+      picture: '{{ state_attr(''person.johan'',''entity_picture'') }}'
+      icon: "{% set n = states('sensor.redmi13_johan_battery_level')|int(0) %} {%\
+        \ set charging = (states('sensor.redmi13_johan_battery_state') in ['charging','charging_ac','charging_usb'])\n\
+        \                   or is_state('binary_sensor.redmi13_johan_is_charging','on')\
+        \ %}\n{% set step = ((n/10)|int)*10 %} {% if charging %}\n  mdi:battery-charging-{{\
+        \ step if step>0 else 10 }}\n{% else %}\n  {% if n >= 100 %} mdi:battery\n\
+        \  {% elif n <= 5 %} mdi:battery-outline\n  {% else %} mdi:battery-{{ step\
+        \ if step>0 else 10 }}\n  {% endif %}\n{% endif %}\n"
+      badge_icon: "{% set charging = (states('sensor.redmi13_johan_battery_state')\
+        \ in ['charging','charging_ac','charging_usb'])\n                   or is_state('binary_sensor.redmi13_johan_is_charging','on')\
+        \ %}\n{{ 'mdi:flash' if charging else 'mdi:battery' }}\n"
+      badge_color: '{% set n = states(''sensor.redmi13_johan_battery_level'')|int(0)
+        %} {% if n >= 60 %} green {% elif n >= 20 %} orange {% else %} red {% endif
+        %}
+
+        '
+      features_position: bottom
+      multiline_secondary: false
+      grid_options:
+        columns: 6
+        rows: 1
+      icon_tap_action:
+        action: navigate
+        navigation_path: ''
+    - type: heading
+      heading: 'TT Mami :'
+      icon: mdi:laptop
+      heading_style: subtitle
+      grid_options:
+        columns: 6
+        rows: auto
+      badges:
+      - type: entity
+        show_state: true
+        show_icon: true
+        entity: input_boolean.mode_teletravail_mami
+        visibility:
+        - condition: state
+          entity: input_boolean.mode_teletravail_mami
+          state: 'on'
+      card_mod:
+        style: "ha-card {\n  opacity: {{ 1 if is_state('input_boolean.mode_teletravail_mami','on')\
+          \ else 0 }};\n}\n"
+    - type: heading
+      heading: 'TT Johan : '
+      icon: mdi:laptop
+      heading_style: subtitle
+      grid_options:
+        columns: 6
+        rows: auto
+      badges:
+      - type: entity
+        show_state: true
+        show_icon: true
+        entity: input_boolean.mode_teletravail_johan
+        visibility:
+        - condition: state
+          entity: input_boolean.mode_teletravail_johan
+          state: 'on'
+      card_mod:
+        style: "ha-card {\n  opacity: {{ 1 if is_state('input_boolean.mode_teletravail_johan','on')\
+          \ else 0 }};\n}\n"
+    - type: heading
+      icon: mdi:car
+      heading_style: subtitle
+      heading: Mami --> Maison
+      grid_options:
+        columns: 6
+        rows: auto
+    - type: heading
+      icon: mdi:car
+      heading: Johan --> Maison
+      heading_style: subtitle
+      grid_options:
+        columns: 6
+        rows: auto
+  - type: grid
+    cards:
+    - type: heading
+      heading_style: title
+      heading: Automatismes
+      icon: mdi:home-automation
+    - type: tile
+      entity: automation.lumieres_auto_salon_ms2_zi4
+      name: Lum. salon auto
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: automation.allume_la_veilleuse_des_enfants_3
+      name: Veilleuse M&F
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: automation.poubelle_afficher_notification_si_collecte_aujourd_hui
+      name: Notif Poubelle
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: automation.controle_tt_johan
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: automation.sdb_vmc_auto_humidite_2
+      name: '%HR VMC RdC'
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: automation.reveil_enfants_alexa_lumiere_progressive
+      name: réveil Enfants
+      show_entity_picture: false
+      hide_state: false
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: automation.fermer_les_volets
+      name: Ouv. Ferm. Volets
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: automation.salon_ampli_auto_alexa_freebox
+      name: Ampli Auto ON/OFF
+      vertical: false
+      features_position: bottom
+  - type: grid
+    cards:
+    - type: heading
+      heading: System Informations
+      heading_style: title
+      icon: mdi:raspberry-pi
+    - type: grid
+      square: false
+      columns: 3
+      cards:
+      - type: gauge
+        name: CPU
+        entity: sensor.localhost_utilisation_cpu
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 60
+          red: 85
+      - type: gauge
+        name: RAM
+        entity: sensor.localhost_utilisation_de_la_memoire
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 70
+          red: 85
+      - type: gauge
+        name: Disque
+        entity: sensor.localhost_utilisation_disque_ssl
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 70
+          red: 90
+      - type: gauge
+        name: T°C CPU
+        entity: sensor.localhost_cpu_thermal_0_temperature
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 50
+          red: 70
+  - type: grid
+    cards:
+    - type: heading
+      icon: mdi:truck-fast
+      heading: Commandes rapides
+      heading_style: title
+    - type: custom:mushroom-chips-card
+      chips:
+      - type: menu
+      - type: weather
+        entity: weather.forecast_maison
+      - type: entity
+        entity: media_player.echo_du_salon
+        name: Echo
+        icon: mdi:music
+  badges: []
+  type: sections
+  max_columns: 2
+  cards: []
+- type: sections
+  max_columns: 3
+  title: R+1
+  path: r-1
+  icon: mdi:home-floor-1
+  sections:
+  - type: grid
+    cards:
+    - type: heading
+      heading: Chambre parents
+      heading_style: title
+      icon: mdi:bed-double
+      badges:
+      - type: entity
+        entity: sensor.zth03_temperature
+      - type: entity
+        entity: sensor.zth03_humidity
+    - type: custom:mushroom-media-player-card
+      entity: media_player.echo_dot_briche
+      name: Echo Parent
+      fill_container: false
+      media_controls:
+      - on_off
+      - play_pause_stop
+      volume_controls: []
+      collapsible_controls: true
+    - type: custom:mushroom-light-card
+      entity: light.amp_chambre_parent
+      name: Ampoule
+      use_light_color: true
+      show_brightness_control: true
+      show_color_temp_control: true
+      collapsible_controls: true
+      show_color_control: true
+    - type: custom:mushroom-climate-card
+      entity: climate.trv_parent
+      name: Parents
+      icon: mdi:radiator
+      show_temperature_control: true
+      hvac_modes:
+      - heat
+      - auto
+      - 'off'
+      grid_options:
+        columns: 12
+        rows: 2
+      double_tap_action:
+        action: more-info
+  - type: grid
+    cards:
+    - type: heading
+      icon: mdi:fridge
+      heading: Cuisine
+      heading_style: title
+      badges:
+      - type: entity
+        entity: binary_sensor.pir3_occupancy
+    - type: tile
+      entity: cover.volet_cuisine
+      name: volet Cuisine
+      icon: mdi:window-shutter-open
+      hide_state: true
+      vertical: false
+      features:
+      - type: cover-open-close
+      features_position: bottom
+    - type: tile
+      entity: cover.volet_balcon
+      name: Volet Balcon
+      hide_state: true
+      vertical: false
+      features:
+      - type: cover-open-close
+      features_position: bottom
+    - type: custom:mushroom-light-card
+      entity: light.lumieres_cuisines
+      name: Cuisine
+      show_brightness_control: true
+      show_color_control: true
+      collapsible_controls: false
+      show_color_temp_control: true
+      use_light_color: false
+      grid_options:
+        columns: 6
+        rows: 2
+      icon_color: amber
+  - type: grid
+    cards:
+    - type: heading
+      icon: mdi:shower-head
+      heading: SdB
+      heading_style: title
+      badges:
+      - type: entity
+        entity: sensor.zth01_temperature
+      - type: entity
+        show_state: true
+        show_icon: true
+        entity: sensor.zth01_humidity
+      - type: entity
+        entity: binary_sensor.zms3_presence
+    - type: tile
+      entity: switch.z1i
+      name: VMC
+      icon: mdi:air-filter
+      vertical: false
+      features_position: bottom
+    - type: custom:mushroom-light-card
+      entity: light.ampoule_sdb_rdc
+      name: SdB RdC
+      use_light_color: false
+      show_color_temp_control: true
+      collapsible_controls: false
+      show_color_control: true
+      show_brightness_control: true
+  - type: grid
+    cards:
+    - type: heading
+      heading: Hall
+      heading_style: title
+      icon: hall
+      badges:
+      - type: entity
+        entity: binary_sensor.pir2_occupancy
+    - type: tile
+      entity: switch.zi5
+      name: Hall RdC
+      icon: mdi:ceiling-light
+      hide_state: true
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: light.zamp7
+      name: Lampadaire
+      icon: mdi:floor-lamp
+      vertical: false
+      features_position: bottom
+  - type: grid
+    cards:
+    - type: heading
+      heading: Entrée
+      heading_style: title
+      badges:
+      - type: entity
+        entity: binary_sensor.pir3_occupancy
+    - type: heading
+      icon: mdi:fridge
+      heading: porte entree
+      heading_style: subtitle
+      badges:
+      - type: entity
+        entity: binary_sensor.porte_entree_contact
+    - type: tile
+      entity: light.amp_entree
+      name: Entrée
+      color: amber
+      vertical: false
+      features_position: bottom
+  - type: grid
+    cards:
+    - type: heading
+      heading: Salon
+      heading_style: title
+      icon: mdi:sofa
+      badges:
+      - type: entity
+        entity: sensor.pr1_puissance
+      - type: entity
+        entity: sensor.ms2_illuminance
+      - type: entity
+        entity: binary_sensor.ms2_presence
+    - type: custom:mushroom-light-card
+      entity: light.lumieres_salon
+      icon_color: amber
+      use_light_color: true
+      show_brightness_control: true
+      show_color_control: true
+      show_color_temp_control: true
+      name: Salle a manger
+    - type: tile
+      entity: cover.vl1
+      name: Volet Salon
+      icon: mdi:window-shutter-open
+      color: accent
+      hide_state: true
+      vertical: false
+      features:
+      - type: cover-open-close
+      features_position: bottom
+    - type: tile
+      entity: cover.volet_sam
+      icon: mdi:window-shutter-open
+      hide_state: false
+      vertical: false
+      features:
+      - type: cover-open-close
+      features_position: bottom
+    - type: custom:mushroom-media-player-card
+      entity: media_player.echo_du_salon
+      media_controls:
+      - on_off
+      - play_pause_stop
+      - next
+      volume_controls:
+      - volume_set
+    - type: media-control
+      entity: media_player.freebox_player_pop
+    - type: tile
+      grid_options:
+        columns: 6
+        rows: 2
+      entity: switch.pr1
+      name: Ampli
+      icon: mdi:disc-player
+      show_entity_picture: false
+      vertical: false
+      tap_action:
+        action: toggle
+      features:
+      - type: toggle
+      features_position: inline
+    - type: tile
+      entity: switch.sw3
+      name: Salon
+      icon: mdi:ceiling-light
+      show_entity_picture: false
+      vertical: false
+      features_position: bottom
+  header:
+    card:
+      type: markdown
+      text_only: true
+      content: RdC
+  dense_section_placement: true
+  cards: []
+- type: sections
+  max_columns: 3
+  title: R+2
+  path: r-2
+  icon: mdi:home-floor-2
+  sections:
+  - type: grid
+    cards:
+    - type: heading
+      icon: mdi:molecule-co
+      heading: Bureau Johan
+      heading_style: title
+      badges:
+      - type: entity
+        entity: sensor.zth05_temperature
+      - type: entity
+        entity: sensor.zth05_humidity
+    - type: tile
+      entity: media_player.platine_jrb
+      features_position: inline
+      vertical: false
+      name: LMS
+      icon: mdi:soundbar
+    - type: tile
+      entity: switch.interrupteur_ecl1
+      name: Bureau Johan
+      vertical: false
+      features_position: bottom
+    - type: custom:mushroom-climate-card
+      entity: climate.trv_bureau_johan
+      name: Bureau Johan
+      fill_container: false
+      hvac_modes:
+      - auto
+      - 'off'
+      show_temperature_control: true
+      grid_options:
+        columns: 12
+        rows: 2
+      secondary_info: state
+      icon: mdi:radiator
+      primary_info: name
+      collapsible_controls: false
+      double_tap_action:
+        action: more-info
+  - type: grid
+    cards:
+    - type: heading
+      heading: Salles de bain R+1
+      heading_style: title
+      icon: mdi:shower
+      badges:
+      - type: entity
+        show_state: true
+        show_icon: true
+        entity: sensor.24c9_t
+      - type: entity
+        show_state: true
+        show_icon: true
+        entity: sensor.24c9_h
+    - type: tile
+      entity: switch.sw4
+      name: SdB R+1
+      icon: mdi:ceiling-light
+      vertical: false
+      features_position: bottom
+    - type: custom:mushroom-media-player-card
+      entity: media_player.echo_de_la_salle_de_bain
+      fill_container: false
+      media_controls:
+      - on_off
+      - next
+      - previous
+      volume_controls:
+      - volume_set
+    column_span: 1
+  - type: grid
+    cards:
+    - type: heading
+      icon: mdi:desk
+      heading: Bureau Mami
+      heading_style: title
+      badges:
+      - type: entity
+        show_state: true
+        show_icon: true
+        entity: sensor.zth06_temperature
+      - type: entity
+        show_state: true
+        show_icon: true
+        entity: sensor.zth06_humidity
+    - type: custom:mushroom-climate-card
+      entity: climate.trv_bureau_mami
+      name: Bureau Mami
+      fill_container: false
+      hvac_modes:
+      - 'off'
+      - auto
+      - heat
+      show_temperature_control: true
+      grid_options:
+        columns: 12
+        rows: 2
+      collapsible_controls: false
+      secondary_info: state
+      icon: mdi:radiator
+      double_tap_action:
+        action: more-info
+    - type: tile
+      entity: switch.z2i_bureau_mami
+      name: Bureau Mami
+      icon: mdi:ceiling-light
+      color: accent
+      hide_state: true
+      vertical: false
+      features_position: bottom
+  - type: grid
+    cards:
+    - type: heading
+      icon: mdi:teddy-bear
+      heading_style: title
+      heading: Chambre Enfants
+      badges:
+      - type: entity
+        entity: sensor.zth02_temperature
+      - type: entity
+        entity: sensor.zth02_humidity
+      - type: entity
+        entity: binary_sensor.zpir5_occupancy
+    - type: tile
+      entity: switch.sw2
+      name: Salle de Jeu
+      icon: mdi:ceiling-light
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: switch.zpr4
+      name: Veilleuse M&F
+      icon: mdi:lightbulb-night-outline
+      show_entity_picture: true
+      hide_state: true
+      vertical: false
+      features_position: bottom
+    - type: custom:mushroom-climate-card
+      entity: climate.trv2_metf
+      name: Chambre Martin & Flora
+      show_temperature_control: true
+      hvac_modes:
+      - 'off'
+      - auto
+      - heat
+      grid_options:
+        columns: 12
+        rows: 2
+      double_tap_action:
+        action: more-info
+      icon: mdi:radiator
+    - type: custom:mushroom-media-player-card
+      entity: media_player.echo_pop_briche
+      media_controls:
+      - on_off
+      - play_pause_stop
+      volume_controls:
+      - volume_set
+    - type: custom:mushroom-light-card
+      entity: light.amp_chambre_enfant
+      name: Chambre M&F
+      icon_color: amber
+      use_light_color: true
+      show_brightness_control: true
+      show_color_control: true
+      show_color_temp_control: true
+  - type: grid
+    cards:
+    - type: heading
+      heading: Couloir
+      heading_style: title
+      badges:
+      - type: entity
+        entity: sensor.ms1_illuminance
+      - type: entity
+        entity: binary_sensor.presence_hall_etage
+    - type: tile
+      entity: switch.zpr1
+      name: Lampadaire
+      icon: mdi:floor-lamp-outline
+      hide_state: true
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: switch.zi6_l1
+      name: Couloir Etage
+      icon: mdi:ceiling-light
+      hide_state: true
+      vertical: false
+      features_position: bottom
+  header:
+    card:
+      type: markdown
+      content: Etage
+      text_only: true
+  dense_section_placement: true
+  cards: []
+- type: sections
+  max_columns: 5
+  icon: mdi:ceiling-light-multiple
+  path: ''
+  sections:
+  - type: grid
+    cards:
+    - type: heading
+      icon: mdi:ceiling-light-multiple
+      heading_style: title
+      heading: Lumières RdC
+    - type: entities
+      entities:
+      - entity: light.amp_entree
+        name: Entree
+        icon: mdi:ceiling-light
+      - entity: light.amp_chambre_parent
+        name: Chambre Parent
+      - entity: light.ampoule_sdb_rdc
+        name: SdB RdC
+        icon: mdi:ceiling-light
+      - entity: light.lumieres_cuisines
+        icon: mdi:ceiling-light
+        name: Cuisine
+      - entity: switch.sw3
+        name: Salon
+        icon: mdi:ceiling-light
+      - entity: switch.zi5
+        name: Hall RdC
+        icon: mdi:ceiling-light
+      - entity: switch.pr6
+        name: Lampadaire Hall
+        icon: mdi:floor-lamp
+      state_color: true
+      show_header_toggle: true
+      title: Commandes RdC
+      grid_options:
+        columns: 12
+        rows: 7
+    - type: entities
+      entities:
+      - entity: automation.cuisine_lumieres_auto_pir2_light_lumieres_cuisines
+        icon: mdi:robot
+        name: Cuisine
+      - entity: automation.sdb_rdc_lumieres_auto_binary_sensor_zms3_presence_light_ampoule_sdb_rdc
+        icon: mdi:robot
+        name: SdB
+      - entity: automation.lumieres_auto_salon_ms2_zi4
+        icon: mdi:robot
+        name: Salle a Manger
+      - entity: automation.salon_lumieres_auto_zpir4_switch_switch_sw3
+        icon: mdi:robot
+        name: salon
+      - entity: automation.hall_rdc_avant_20h30_lux_650_zi5
+        icon: mdi:robot
+        name: Hall
+      - entity: automation.lumiere_hall_rdc
+        name: Lampadaire Hall
+        icon: mdi:robot
+      state_color: true
+      show_header_toggle: true
+      title: Autom. RdC
+      grid_options:
+        columns: 12
+        rows: 6
+  - type: grid
+    cards:
+    - type: heading
+      icon: mdi:ceiling-light-multiple
+      heading: Lumières R+1
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: switch.interrupteur_ecl1
+      - entity: switch.zpr1
+        name: Couloir R+1
+        icon: mdi:floor-lamp
+      - entity: switch.z2i_bureau_mami
+        name: Bureau Mami
+        icon: mdi:ceiling-light
+      - entity: switch.sw2
+        icon: mdi:ceiling-light
+        name: Salle de Jeux
+      - entity: switch.sw4
+        icon: mdi:ceiling-light
+        name: SdB R+1
+      - entity: switch.zi6_l1
+        icon: mdi:ceiling-light
+        name: Couloir R+1
+      - entity: light.amp_chambre_enfant
+        name: Chambre M&F
+        icon: mdi:ceiling-light
+      title: Commandes R+1
+    - type: entities
+      entities:
+      - entity: automation.lumiere_auto_enfants
+        icon: mdi:robot
+        name: Chambre Enfants
+      - entity: automation.presence_2_pir_lux_zi6_l1_09h00_20h30_pr3_sinon_extinction_5_apres_derniere_presence
+        icon: mdi:robot
+        name: Hall R+1
+      state_color: true
+      show_header_toggle: true
+      title: Autom. R+1
+      grid_options:
+        columns: 12
+        rows: 3
+  - type: grid
+    cards:
+    - type: heading
+      heading: Scènes
+      heading_style: title
+      icon: mdi:brightness-7
+    - type: tile
+      entity: input_boolean.mode_tv
+      name: Mode TV
+      icon: mdi:television
+      show_entity_picture: false
+      hide_state: true
+      vertical: false
+      tap_action:
+        action: toggle
+      features_position: bottom
+    - type: tile
+      entity: input_boolean.mode_tv
+      name: Mode fête
+      icon: mdi:party-popper
+      show_entity_picture: false
+      hide_state: true
+      vertical: false
+      tap_action:
+        action: toggle
+      features_position: bottom
+    - type: tile
+      entity: input_boolean.mode_tv
+      name: Mode Manu
+      icon: mdi:car-shift-pattern
+      show_entity_picture: false
+      hide_state: true
+      vertical: false
+      tap_action:
+        action: toggle
+      features_position: bottom
+    - type: tile
+      entity: input_boolean.mode_noel
+      name: Mode Noel
+      icon: mdi:seat
+      show_entity_picture: false
+      hide_state: true
+      vertical: false
+      tap_action:
+        action: toggle
+      features_position: bottom
+  - type: grid
+    cards:
+    - type: heading
+      heading: Groupes
+      heading_style: title
+    - type: tile
+      entity: switch.all_lumieres
+      name: All Lumières
+      icon: mdi:ceiling-light-multiple
+      vertical: false
+      features_position: bottom
+    - type: tile
+      entity: cover.all_volets
+      icon: mdi:window-shutter-settings
+      color: light-blue
+      hide_state: true
+      vertical: false
+      features:
+      - type: cover-open-close
+      features_position: bottom
+    - type: tile
+      entity: light.all_ampoules
+      name: All Ampoules
+      color: amber
+      hide_state: true
+      vertical: false
+      features_position: bottom
+  header: {}
+- title: Chaudière
+  path: chaudiere
+  icon: mdi:fire
+  cards:
+  - type: conditional
+    conditions:
+    - entity: binary_sensor.alarme_pression_chaudiere
+      state: 'on'
+    card:
+      type: markdown
+      title: ⚠️ Alerte pression
+      content: '**Pression hors plage !**   Actuelle : **{{ states(''sensor.pression_chauffage_num'')
+        }} bar**   Seuils: **< 0.8** ou **> 2.5** bar.
+
+        '
+  - type: thermostat
+    entity: climate.thermostat_hc1
+    name: Chauffage - Thermostat HC1
+  - type: entities
+    title: Consignes (Auto)
+    entities:
+    - entity: sensor.ems_esp_thermostat_hc1_modetype
+      name: Mode (jour/nuit)
+    - entity: number.ems_esp_thermostat_hc1_daytemp
+      name: Consigne Jour
+    - entity: number.ems_esp_thermostat_hc1_nighttemp
+      name: Consigne Nuit
+  - type: horizontal-stack
+    cards:
+    - type: gauge
+      name: Temp. flux
+      entity: sensor.boiler_temp_flux_num
+      min: 0
+      max: 80
+    - type: gauge
+      name: Temp. retour
+      entity: sensor.boiler_temp_retour_num
+      min: 0
+      max: 80
+    - type: gauge
+      name: Temp. chaudière
+      entity: sensor.boiler_temp_chaudiere_num
+      min: 0
+      max: 90
+  - type: glance
+    title: État instantané
+    entities:
+    - entity: binary_sensor.ems_esp_boiler_heatingactive
+      name: Chauffage actif
+    - entity: binary_sensor.ems_esp_boiler_tapwateractive
+      name: ECS active
+    - entity: binary_sensor.ems_esp_boiler_burngas
+      name: Gaz
+    - entity: binary_sensor.ems_esp_boiler_heatingpump
+      name: Pompe chauffage
+  - type: horizontal-stack
+    cards:
+    - type: gauge
+      name: Temp. Interieur
+      entity: sensor.ems_esp_thermostat_hc1_currtemp
+      min: 0
+      max: 80
+    - type: gauge
+      name: Extérieure
+      entity: sensor.exterieure_num
+      min: -15
+      max: 45
+    - type: gauge
+      name: ECS
+      entity: sensor.ecs_temp_interne_num
+      min: 0
+      max: 80
+  - type: entities
+    title: Énergie
+    entities:
+    - entity: sensor.ems_esp_boiler_curburnpow
+      name: Puissance brûleur actuelle (%)
+    - entity: sensor.ems_esp_boiler_nrgtotal
+      name: Compteur énergie brut
+  - type: entities
+    title: Diagnostique Bus EMS
+    entities:
+    - entity: sensor.ems_esp_system_rxfails
+      name: Rx fails
+    - entity: sensor.ems_esp_system_txwrites
+      name: Tx writes
+    - entity: sensor.ems_esp_system_txfails
+      name: Tx fails
+  - type: entities
+    title: Infos chaudière
+    entities:
+    - entity: sensor.pression_chauffage_num
+      name: Pression
+    - entity: text.ems_esp_thermostat_datetime
+      name: Thermostat Date/heure
+    - entity: sensor.ems_esp_boiler_burnstarts
+      name: Démarrages du brûleur
+    - entity: sensor.ems_esp_boiler_burnworkmin
+      name: Durée totale brûleur (min)
+  - type: history-graph
+    title: Historique températures (6 h)
+    hours_to_show: 6
+    refresh_interval: 30
+    entities:
+    - sensor.boiler_temp_flux_num
+    - sensor.boiler_temp_retour_num
+    - sensor.boiler_temp_chaudiere_num
+    - sensor.exterieure_num
+  - type: history-graph
+    title: 'Consigne vs Mesure '
+    hours_to_show: 12
+    refresh_interval: 60
+    entities:
+    - entity: sensor.ems_esp_thermostat_hc1_currtemp
+    - entity: sensor.hc1_consigne_courante
+  - type: entities
+    title: Commande ECS
+    entities:
+    - entity: number.ems_esp_boiler_wwseltemp
+      name: ECS - Température sélectionnée
+    - entity: switch.ems_esp_boiler_wwactivated
+      name: ECS activée
+    - entity: switch.ems_esp_boiler_wwcirc
+      name: Circulation ECS
+    - entity: switch.ems_esp_boiler_wwonetime
+      name: Charge unique ECS
+  - type: entities
+    title: Diagnostic EMS-ESP
+    entities:
+    - binary_sensor.system_status
+    - sensor.ems_esp_system_bus_status
+    - sensor.ems_esp_system_version
+    - sensor.ems_esp_system_rssi
+    - sensor.ems_esp_system_wifistrength
+    - sensor.ems_esp_system_uptime
+    - sensor.ems_esp_system_mqttfails
+- title: Musique
+  path: musique
+  icon: mdi:music-circle
+  cards:
+  - type: vertical-stack
+    cards:
+    - type: heading
+      heading: Lecteur Multiroom Echo
+      icon: mdi:music-box-multiple-outline
+    - type: entities
+      show_header_toggle: false
+      entities:
+      - entity: input_select.choix_echo
+        name: Enceinte Target
+        icon: mdi:speaker-multiple
+      - entity: input_select.choix_musique
+        name: Musique / Radio
+        icon: mdi:radio
+    - type: custom:mushroom-chips-card
+      alignment: center
+      chips:
+      - type: template
+        icon: mdi:play
+        icon_color: green
+        content: Jouer
+        tap_action:
+          action: call-service
+          service: script.play_music_multiroom
+      - type: template
+        icon: mdi:stop
+        icon_color: red
+        content: Arrêter
+        tap_action:
+          action: call-service
+          service: script.stop_music_multiroom
+    - type: conditional
+      conditions:
+      - entity: input_select.choix_echo
+        state: Salon
+      card:
+        type: custom:mushroom-media-player-card
+        entity: media_player.echo_du_salon
+        name: Echo Salon
+        media_controls:
+        - on_off
+        - previous
+        - next
+        volume_controls:
+        - volume_set
+        show_volume_level: true
+        collapsible_controls: false
+    - type: conditional
+      conditions:
+      - entity: input_select.choix_echo
+        state: Salle de Bain
+      card:
+        type: custom:mushroom-media-player-card
+        entity: media_player.echo_de_la_salle_de_bain
+        name: Echo Salle de Bain
+        media_controls:
+        - on_off
+        - previous
+        - next
+        volume_controls:
+        - volume_set
+        show_volume_level: true
+        collapsible_controls: false
+    - type: conditional
+      conditions:
+      - entity: input_select.choix_echo
+        state: Martin
+      card:
+        type: custom:mushroom-media-player-card
+        entity: media_player.echo_pop_briche
+        name: Echo de Martin
+        media_controls:
+        - on_off
+        - previous
+        - next
+        volume_controls:
+        - volume_set
+        show_volume_level: true
+        collapsible_controls: false
+    - type: conditional
+      conditions:
+      - entity: input_select.choix_echo
+        state: Flora
+      card:
+        type: custom:mushroom-media-player-card
+        entity: media_player.echo_dot_sdb
+        name: Echo de Flora
+        media_controls:
+        - on_off
+        - previous
+        - next
+        volume_controls:
+        - volume_set
+        show_volume_level: true
+        collapsible_controls: false
+    - type: conditional
+      conditions:
+      - entity: input_select.choix_echo
+        state: Parents
+      card:
+        type: custom:mushroom-media-player-card
+        entity: media_player.echo_dot_briche
+        name: Echo des Parents
+        media_controls:
+        - on_off
+        - previous
+        - next
+        volume_controls:
+        - volume_set
+        show_volume_level: true
+        collapsible_controls: false
+    - type: conditional
+      conditions:
+      - entity: input_select.choix_echo
+        state: Partout
+      card:
+        type: custom:mushroom-media-player-card
+        entity: media_player.partout
+        name: Groupe Partout
+        media_controls:
+        - on_off
+        - previous
+        - next
+        volume_controls:
+        - volume_set
+        show_volume_level: true
+        collapsible_controls: false

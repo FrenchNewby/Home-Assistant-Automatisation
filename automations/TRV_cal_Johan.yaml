@@ -1,0 +1,9 @@
+- id: '1761931796096'
+  alias: TRV Calibrator_Johan
+  description: ''
+  use_blueprint:
+    path: rotilho/trv_calibrator.yaml
+    input:
+      trv: climate.trv_bureau_johan
+      temperature_sensor: sensor.zth05_temperature
+      trv_calibration_number: number.0xa4c138f7aeb02076_local_temperature_calibration

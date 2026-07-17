@@ -1,0 +1,9 @@
+- id: '1761985220229'
+  alias: Cal TRV2_MetF
+  description: ''
+  use_blueprint:
+    path: rotilho/trv_calibrator.yaml
+    input:
+      trv: climate.trv2_metf
+      temperature_sensor: sensor.zth02_temperature
+      trv_calibration_number: number.trv2_metf_local_temperature_calibration

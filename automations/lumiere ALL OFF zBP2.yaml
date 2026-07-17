@@ -1,0 +1,24 @@
+- id: bp_zbp2_all_off
+  alias: BP ZBP2 – Tout éteindre (ampoules + lumières)
+  mode: single
+
+  trigger:
+    - platform: state
+      entity_id: sensor.zbp2_action
+      to: "single"    # adapte si ton bouton envoie "press", "single_left", etc.
+
+  condition: []
+
+  action:
+    # 1. Extinction des lumières et prises
+    - service: homeassistant.turn_off
+      target:
+        entity_id:
+          - light.all_ampoules
+          - switch.all_lumieres
+          - switch.pr1
+
+    # 2. Arrêt d'Alexa (Salon)
+    - service: media_player.media_stop
+      target:
+        entity_id: media_player.echo_du_salon

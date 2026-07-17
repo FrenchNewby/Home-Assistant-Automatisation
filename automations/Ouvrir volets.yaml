@@ -1,0 +1,23 @@
+- id: '1759605815912'
+  alias: Ouvrir les volets
+  description: ''
+  triggers:
+  - trigger: time
+    at: 06:30:00
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - trigger: time
+    at: 07:15:00
+    weekday:
+    - sat
+    - sun
+  conditions: []
+  action:
+  - service: cover.open_cover
+    target:
+      entity_id: cover.all_volets
+  mode: single

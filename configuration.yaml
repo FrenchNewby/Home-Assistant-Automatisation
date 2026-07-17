@@ -1,0 +1,698 @@
+default_config:
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+automation: !include_dir_merge_list automations
+script: !include scripts.yaml
+scene: !include scenes.yaml
+input_boolean:
+  mode_tv:
+    name: Mode TV
+    icon: mdi:television
+  detection_mouvement_salon_blink:
+    name: "Détection Mouvement Salon Blink"
+    icon: mdi:motion-sensor
+
+input_select:
+  choix_echo:
+    name: "Choix de l'enceinte Echo"
+    options:
+      - "Salon"
+      - "Salle de Bain"
+      - "Martin"
+      - "Flora"
+      - "Parents"
+      - "Partout"
+    icon: mdi:speaker-multiple
+  choix_musique:
+    name: "Choix de la musique/radio"
+    options:
+      - "Ma Musique (Deezer)"
+      - "Playlist Pop (Deezer)"
+      - "Playlist Rock (Deezer)"
+      - "RTL"
+      - "France Inter"
+      - "NRJ"
+      - "Nostalgie"
+    icon: mdi:music
+group:
+  gestion_automations_volets:
+    name: "Contrôle Automatisations Volets"
+    entities:
+      - automation.fermer_les_volets
+      - automation.ouvrir_les_volets
+template:
+  - binary_sensor:
+      - name: "PC Johan Actif"
+        unique_id: pc_johan_actif
+        device_class: running
+        state: "{{ states('sensor.pr2_puissance') | float(0) > 15.0 }}"
+      - name: "Alarme pression chaudière"
+        unique_id: boiler_pressure_alarm
+        device_class: problem
+        state: >
+          {% set p = states('sensor.pression_chauffage_num') | float(0) %}
+          {{ p < 0.8 or p > 2.5 }}
+        attributes:
+          pressure_bar: "{{ states('sensor.pression_chauffage_num') }}"
+          low_threshold: "{{0.8}}"
+          high_threshold: "{{2.5}}"
+      - name: "Johan à la maison (mix)"
+        unique_id: johan_home_mix
+        device_class: presence
+        state: >
+          {{
+            is_state('person.johan','home')
+            or states('sensor.redmi13_johan_wifi_connection') in ['reseau_JRB','reseau_JRB_F']
+          }}
+      - name: "Mami à la maison (mix)"
+        unique_id: Mami_home
+        device_class: presence
+        state: >
+          {{
+            is_state('person.Mami','home')
+            or states('device_tracker.s22_de_mami','home')
+          }}
+      - name: "Clim Active"
+        unique_id: clim_active
+        state: "{{ not is_state('climate.espclim_mqtt_climate', 'off') }}"
+      - name: "TV Active"
+        unique_id: tv_active
+        state: "{{ states('media_player.tv_salon') not in ['off', 'unavailable', 'unknown', 'none'] }}"
+  - sensor:
+      # Jeton de face recognition Double Take
+      - name: "Dernier Visage Détecté"
+        unique_id: dernier_visage_detecte_salon
+        icon: mdi:face-recognition
+        state: >
+          {% set matches = state_attr('sensor.double_take_salon', 'matches') %}
+          {% if matches and matches | length > 0 %}
+            {{ matches[0].name | title }} ({{ matches[0].confidence | round(0) }}%)
+          {% else %}
+            Inconnu
+          {% endif %}
+      - name: "PR4 MAL – Énergie (kWh) FIX"
+        unique_id: pr4_mal_energy_kwh_fix
+        state: "{{ states('sensor.pr4_mal_energy') | float(0) / 1000}}"
+        unit_of_measurement: "kWh"          # si ta source est en Wh, divise par 1000
+        device_class: energy
+        state_class: total_increasing
+        availability: >
+          {{ states('sensor.pr4_mal_energy') not in ['unknown','unavailable','none'] }}
+      - name: "PR2 – Énergie (kWh) – dashboard"
+        unique_id: pr2_energy_kwh_dashboard
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        # On force un nombre même si la source est momentanément inconnue
+        state: "{{ states('sensor.pr2_energie_totale')|float(0) }}"
+        availability: >
+          {{ states('sensor.pr2_energie_totale') not in ['unknown','unavailable','none'] }}
+      - name: "PR1 Ampli – Énergie (kWh) FIX"
+        unique_id: pr1_ampli_energy_kwh_fix
+        state: "{{ states('sensor.pr1_energy_2') | float(0) / 1000}}"
+        unit_of_measurement: "kWh"          # si ta source est en Wh, divise par 1000
+        device_class: energy
+        state_class: total_increasing
+        availability: >
+          {{ states('sensor.pr1_energy_2') not in ['unknown','unavailable','none'] }}
+      - name: "HC1 Consigne Courante"
+        unit_of_measurement: "°C"
+        state: >
+          {% set modetype = states('sensor.ems_esp_thermostat_hc1_modetype')|lower|replace('é','e') %}
+          {% set t_day   = states('number.ems_esp_thermostat_hc1_daytemp')|replace(',','.')|float(0) %}
+          {% set t_night = states('number.ems_esp_thermostat_hc1_nighttemp')|replace(',','.')|float(0) %}
+          {% if 'nuit' in modetype or 'night' in modetype or 'reduit' in modetype or 'eco' in modetype %}
+            {{ t_night }}
+          {% else %}
+            {{ t_day }}
+          {% endif %}
+      - name: "Puissance Injectée Réseau"
+        unique_id: puissance_injectee_reseau
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set linky = states('sensor.garage_linky_esp32_linky_puissance_apparente') | float(0) %}
+          {% set pince = states('sensor.double_clamp_meter_puissance_a') | float(0) %}
+          {# Si le Linky affiche 0 (ou proche), la valeur absolue de la pince est notre injection #}
+          {% if linky <= 10 %}
+            {{ pince | round(1) }}
+          {% else %}
+            0.0
+          {% endif %}
+      - name: "Trajet Socomec Distance"
+        unit_of_measurement: "km"
+        state: "{{ state_attr('sensor.trajet_vers_socomec','distance') }}"
+      - name: "Trajet Socomec Itineraire"
+        state: "{{ state_attr('sensor.trajet_vers_socomec','route') }}"
+      # --- Températures principales (numériques) ---
+      - name: "Boiler Temp flux (num)"
+        unique_id: boiler_curflowtemp_num
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {{ states('sensor.ems_esp_boiler_curflowtemp') | regex_replace('°C','') | float(0) }}
+      - name: "Boiler Temp retour (num)"
+        unique_id: boiler_rettemp_num
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {{ states('sensor.ems_esp_boiler_rettemp') | regex_replace('°C','') | float(0) }}
+      - name: "Boiler Temp chaudière (num)"
+        unique_id: boiler_boiltemp_num
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {{ states('sensor.ems_esp_boiler_boiltemp') | regex_replace('°C','') | float(0) }}
+      - name: "Extérieure (num)"
+        unique_id: boiler_outdoor_temp_num
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {{ states('sensor.ems_esp_boiler_outdoortemp') | regex_replace('°C','') | float(0) }}
+      - name: "ECS Temp interne (num)"
+        unique_id: boiler_wwcurtemp_num
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {{ states('sensor.ems_esp_boiler_wwcurtemp') | regex_replace('°C','') | float(0) }}
+      # --- Pression système ---
+      - name: "Pression chauffage (num)"
+        unique_id: boiler_syspress_num
+        unit_of_measurement: "bar"
+        device_class: pressure
+        state_class: measurement
+        state: >
+          {{ states('sensor.ems_esp_boiler_syspress') | regex_replace('bar','') | float(0) }}
+      # --- Modulations / puissances ---
+      - name: "Pompe chauffage modulation (num)"
+        unique_id: boiler_pump_mod_num
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: >
+          {{ states('sensor.ems_esp_boiler_heatingpumpmod') | regex_replace('%','') | float(0) }}
+      - name: "Brûleur puissance actuelle (num)"
+        unique_id: boiler_burnpow_num
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: >
+          {{ states('sensor.ems_esp_boiler_curburnpow') | regex_replace('%','') | float(0) }}
+      # --- Énergie (kWh) ---
+      - name: "Énergie totale chaudière (kWh)"
+        unique_id: boiler_energy_total_kwh
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        state: >
+          {{ states('sensor.ems_esp_boiler_nrgtotal') | regex_replace('kWh','') | float }}
+        availability: >
+          {{ states('sensor.ems_esp_boiler_nrgtotal') not in ['unknown', 'unavailable', 'none'] }}
+      - name: "Énergie ECS (kWh)"
+        unique_id: boiler_energy_ww_kwh
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        state: >
+          {{ states('sensor.ems_esp_boiler_nrgww') | regex_replace('kWh','') | float }}
+        availability: >
+          {{ states('sensor.ems_esp_boiler_nrgww') not in ['unknown', 'unavailable', 'none'] }}
+      - name: "Électricité Totale Clamps (kWh) Robust"
+        unique_id: electricity_total_clamps_robust
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        state: >
+          {{ states('sensor.double_clamp_meter_total_energy_a') | float }}
+        availability: >
+          {% set val = states('sensor.double_clamp_meter_total_energy_a') %}
+          {{ val not in ['unknown', 'unavailable', 'none'] and val | float(0) > 0.1 }}
+#config pour Nginx
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.30.33.0/24 # réseau des add-ons HA (couvre Nginx Proxy Manager)
+    - 172.30.32.0/24 # passerelle et réseau interne supervisor
+api:
+alexa:
+  smart_home:
+    locale: fr-FR
+    endpoint: https://api.eu.amazonalexa.com/v3/events
+    client_id: !secret alexa_client_id
+    client_secret: !secret alexa_client_secret
+rest_command:
+  double_take_salon:
+    url: "http://c7657554-double-take:3000/api/recognize?camera=salon&url=http://172.30.32.1:8123/local/salon_snapshot.jpg"
+    method: GET
+# Intégration Modbus TCP pour centrales de mesure Socomec
+# Intégration Modbus TCP pour centrales de mesure Socomec
+modbus:
+  - name: diris_a40
+    type: tcp
+    host: 192.168.1.165
+    port: 502
+    sensors:
+      # =================================================================
+      # MODULE U-30 (Tension / Fréquence) - Slave ID: 6
+      # =================================================================
+      - name: "Socomec U30 Tension Simple Système"
+        slave: 6
+        address: 36867
+        data_type: uint32
+        scale: 0.01
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec U30 Tension Composée Système"
+        slave: 6
+        address: 36869
+        data_type: uint32
+        scale: 0.01
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec U30 Fréquence"
+        slave: 6
+        address: 36871
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "Hz"
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec U30 Tension V1"
+        slave: 6
+        address: 36873
+        data_type: uint32
+        scale: 0.01
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec U30 Tension V2"
+        slave: 6
+        address: 36875
+        data_type: uint32
+        scale: 0.01
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec U30 Tension V3"
+        slave: 6
+        address: 36877
+        data_type: uint32
+        scale: 0.01
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 15
+      # =================================================================
+      # MODULE S-135 (Mesures Circuit Dédié) - Slave ID: 3
+      # =================================================================
+      - name: "Socomec S135 Courant Système"
+        slave: 3
+        address: 18440
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Courant I1"
+        slave: 3
+        address: 18458
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Courant I2"
+        slave: 3
+        address: 18460
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Courant I3"
+        slave: 3
+        address: 18462
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Puissance Active Totale"
+        slave: 3
+        address: 18476
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Puissance Active P1"
+        slave: 3
+        address: 18488
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Puissance Active P2"
+        slave: 3
+        address: 18490
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Puissance Active P3"
+        slave: 3
+        address: 18492
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Puissance Réactive Totale"
+        slave: 3
+        address: 18478
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "var"
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Puissance Apparente Totale"
+        slave: 3
+        address: 18484
+        data_type: uint32
+        scale: 1
+        unit_of_measurement: "VA"
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Facteur de Puissance"
+        slave: 3
+        address: 18486
+        data_type: int16
+        scale: 0.001
+        precision: 3
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec S135 Énergie Active Ea+"
+        slave: 3
+        address: 19843
+        data_type: uint32
+        scale: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+      # =================================================================
+      # MODULE I-35 (1) - Slave ID: 4
+      # =================================================================
+      - name: "Socomec I35 Courant Système"
+        slave: 4
+        address: 18440
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Courant I1"
+        slave: 4
+        address: 18458
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Courant I2"
+        slave: 4
+        address: 18460
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Courant I3"
+        slave: 4
+        address: 18462
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Puissance Active Totale"
+        slave: 4
+        address: 18476
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Puissance Active P1"
+        slave: 4
+        address: 18488
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Puissance Active P2"
+        slave: 4
+        address: 18490
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Puissance Active P3"
+        slave: 4
+        address: 18492
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Puissance Réactive Totale"
+        slave: 4
+        address: 18478
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "var"
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Puissance Apparente Totale"
+        slave: 4
+        address: 18484
+        data_type: uint32
+        scale: 1
+        unit_of_measurement: "VA"
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Facteur de Puissance"
+        slave: 4
+        address: 18486
+        data_type: int16
+        scale: 0.001
+        precision: 3
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35 Énergie Active Ea+"
+        slave: 4
+        address: 19843
+        data_type: uint32
+        scale: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+      # =================================================================
+      # MODULE I-35 (2) - Slave ID: 7
+      # =================================================================
+      - name: "Socomec I35_2 Courant Système"
+        slave: 7
+        address: 18440
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Courant I1"
+        slave: 7
+        address: 18458
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Courant I2"
+        slave: 7
+        address: 18460
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Courant I3"
+        slave: 7
+        address: 18462
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Puissance Active Totale"
+        slave: 7
+        address: 18476
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Puissance Active P1"
+        slave: 7
+        address: 18488
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Puissance Active P2"
+        slave: 7
+        address: 18490
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Puissance Active P3"
+        slave: 7
+        address: 18492
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Puissance Réactive Totale"
+        slave: 7
+        address: 18478
+        data_type: int32
+        scale: 1
+        unit_of_measurement: "var"
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Puissance Apparente Totale"
+        slave: 7
+        address: 18484
+        data_type: uint32
+        scale: 1
+        unit_of_measurement: "VA"
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Facteur de Puissance"
+        slave: 7
+        address: 18486
+        data_type: int16
+        scale: 0.001
+        precision: 3
+        state_class: measurement
+        scan_interval: 15
+      - name: "Socomec I35_2 Énergie Active Ea+"
+        slave: 7
+        address: 19843
+        data_type: uint32
+        scale: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+sensor:
+  - platform: history_stats
+    name: "Nombre de démarrages Clim aujourd'hui"
+    unique_id: count_clim_starts_today
+    entity_id: binary_sensor.clim_active
+    state: "on"
+    type: count
+    start: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: "Durée TV aujourd'hui"
+    unique_id: tv_active_duration_today
+    entity_id: binary_sensor.tv_active
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
+    end: "{{ now() }}"
+counter:
+  total_clim_starts:
+    name: "Nombre total de lancements Clim"
+    icon: mdi:air-conditioner
+utility_meter:
+  consommation_electrique_journaliere:
+    source: sensor.electricite_totale_clamps_kwh_robust
+    cycle: daily
+    name: "Électricité consommée aujourd'hui"
+  consommation_gaz_journaliere:
+    source: sensor.energie_totale_chaudiere_kwh
+    cycle: daily
+    name: "Gaz consommé aujourd'hui"
+
+# Configuration des Tableaux de Bord Lovelace
+lovelace:
+  mode: storage
+  dashboards:
+    socomec-tdb:
+      mode: yaml
+      title: Socomec Digiware
+      icon: mdi:flash-circle
+      show_in_sidebar: true
+      filename: Socomec_TdB.yaml

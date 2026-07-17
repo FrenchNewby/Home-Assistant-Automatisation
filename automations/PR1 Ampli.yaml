@@ -1,0 +1,110 @@
+- id: salon_ampli_auto_alexa_tcl
+  alias: "Gestion Ampli On/OFF"
+  description: >
+    Allume PR1 si Echo joue ou si la TV TCL du salon est allumée.
+    Éteint après 15 min seulement si Echo ne joue pas, la TV est OFF, et le mode TV est OFF.
+  mode: restart
+
+  trigger:
+    # --- ON ---
+    - id: alexa_play
+      platform: state
+      entity_id: media_player.echo_du_salon
+      to: "playing"
+
+    - id: tv_on
+      platform: state
+      entity_id: media_player.tv_salon
+      to: "on"
+
+    - id: tv_playing
+      platform: state
+      entity_id: media_player.tv_salon
+      to: "playing"
+
+    # --- OFF candidates ---
+    - id: alexa_idle_15m
+      platform: state
+      entity_id: media_player.echo_du_salon
+      to: "paused"
+      for: "00:15:00"
+
+    - id: alexa_unavail_15m
+      platform: state
+      entity_id: media_player.echo_du_salon
+      to: "unavailable"
+      for: "00:15:00"
+
+    - id: alexa_unknown_15m
+      platform: state
+      entity_id: media_player.echo_du_salon
+      to: "unknown"
+      for: "00:15:00"
+
+    - id: tv_off_15m
+      platform: state
+      entity_id: media_player.tv_salon
+      to: "off"
+      for: "00:15:00"
+
+    - id: tv_unavail_15m
+      platform: state
+      entity_id: media_player.tv_salon
+      to: "unavailable"
+      for: "00:15:00"
+
+    - id: tv_unknown_15m
+      platform: state
+      entity_id: media_player.tv_salon
+      to: "unknown"
+      for: "00:15:00"
+
+  variables:
+    echo_playing: "{{ is_state('media_player.echo_du_salon', 'playing') }}"
+    # La TV est considérée comme allumée si elle est sur "on" ou "playing"
+    tv_on_now: "{{ is_state('media_player.tv_salon', 'on') or is_state('media_player.tv_salon', 'playing') }}"
+    tv_mode: "{{ is_state('input_boolean.mode_tv', 'on') }}"
+    # On n'éteint que si l'Echo ne joue pas, la TV n'est pas active, et le mode cinéma virtuel est OFF
+    can_power_off: "{{ (not echo_playing) and (not tv_on_now) and (not tv_mode) }}"
+
+  action:
+    - choose:
+        # -------- ALLUMAGE --------
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: trigger
+                  id: alexa_play
+                - condition: trigger
+                  id: tv_on
+                - condition: trigger
+                  id: tv_playing
+            - condition: state
+              entity_id: switch.PR1
+              state: "off"
+          sequence:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.PR1
+
+        # -------- EXTINCTION --------
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: trigger
+                  id:
+                    - alexa_idle_15m
+                    - alexa_unavail_15m
+                    - alexa_unknown_15m
+                    - tv_off_15m
+                    - tv_unavail_15m
+                    - tv_unknown_15m
+            - condition: template
+              value_template: "{{ can_power_off }}"
+            - condition: state
+              entity_id: switch.PR1
+              state: "on"
+          sequence:
+            - service: switch.turn_off
+              target:
+                entity_id: switch.PR1

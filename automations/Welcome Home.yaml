@@ -1,0 +1,138 @@
+- id: accueil_porte_tel_absent_15min_connexion_3min
+  alias: Accueil – Porte + (Johan/Mami) absent ≥15min puis arrivée ≤3min
+  description: >
+    À l'ouverture de la porte, si Johan ou Mami a été absent(e) ≥15min :
+    - si déjà HOME depuis ≤3min → annonce immédiate
+    - sinon on attend ≤3min un passage à HOME → annonce
+    - on ne chauffe (21°C) que si 07:00–20:00 ET qu'il y a eu annonce
+  mode: single
+
+  variables:
+    porte: binary_sensor.porte_entree_contact
+    alexa: media_player.echo_du_salon
+    pr1: switch.pr1
+    phone_johan: device_tracker.redmi_note_13_pro_3
+    phone_mami: device_tracker.sm_s901b
+    absence_secs: 900         # 15 min 900
+    window_secs: 180          # 3 min
+    music_id: "Musique Douce"
+
+    eligible_johan: >
+      {% set p = states[phone_johan] %}
+      {{ p is not none and p.state != 'home' and (as_timestamp(now()) - as_timestamp(p.last_changed, 0)) >= absence_secs }}
+    eligible_mami: >
+      {% set p = states[phone_mami] %}
+      {{ p is not none and p.state != 'home' and (as_timestamp(now()) - as_timestamp(p.last_changed, 0)) >= absence_secs }}
+
+    already_johan: >
+      {% set p = states[phone_johan] %}
+      {{ p is not none and p.state == 'home' and (as_timestamp(now()) - as_timestamp(p.last_changed, 0)) <= window_secs }}
+    already_mami: >
+      {% set p = states[phone_mami] %}
+      {{ p is not none and p.state == 'home' and (as_timestamp(now()) - as_timestamp(p.last_changed, 0)) <= window_secs }}
+
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.porte_entree_contact
+      to: "on"
+
+  condition:
+    - condition: template
+      value_template: "{{ eligible_johan or eligible_mami }}"
+
+  action:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ eligible_johan and already_johan }}"
+          sequence:
+            - variables:
+                who: "Johan"
+                msg: "Bienvenue à la maison, Johan !"
+            - choose:
+                - conditions:
+                    - condition: time
+                      after: "07:00:00"
+                      before: "20:00:00"
+                  sequence:
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.thermostat_hc1
+                      data:
+                        temperature: 20.5
+            - service: script.annonce_accueil_pn_notif_alexa_musique
+              data:
+                who: "{{ who }}"
+                alexa: "{{ alexa }}"
+                pr1: "{{ pr1 }}"
+                message: "{{ msg }}"
+                music_id: "{{ music_id }}"
+
+        - conditions:
+            - condition: template
+              value_template: "{{ eligible_mami and already_mami }}"
+          sequence:
+            - variables:
+                who: "Mami"
+                msg: "Bienvenue à la maison, Mami !"
+            - choose:
+                - conditions:
+                    - condition: time
+                      after: "07:00:00"
+                      before: "20:00:00"
+                  sequence:
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.thermostat_hc1
+                      data:
+                        temperature: 20.5
+            - service: script.annonce_accueil_pn_notif_alexa_musique
+              data:
+                who: "{{ who }}"
+                alexa: "{{ alexa }}"
+                pr1: "{{ pr1 }}"
+                message: "{{ msg }}"
+                music_id: "{{ music_id }}"
+
+      default:
+        - wait_for_trigger:
+            - id: j_home
+              platform: state
+              entity_id: device_tracker.redmi_note_13_pro_3
+              to: "home"
+            - id: m_home
+              platform: state
+              entity_id: device_tracker.sm_s901b
+              to: "home"
+          timeout: "00:03:00"
+          continue_on_timeout: true
+
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: "{{ wait.completed }}"
+              sequence:
+                - variables:
+                    who: >
+                      {{ 'Johan' if wait.trigger.id == 'j_home' else 'Mami' }}
+                    msg: >
+                      {{ 'Bienvenue à la maison, Johan !' if wait.trigger.id == 'j_home' else 'Bienvenue à la maison, Mami !' }}
+                - choose:
+                    - conditions:
+                        - condition: time
+                          after: "07:00:00"
+                          before: "20:00:00"
+                      sequence:
+                        - service: climate.set_temperature
+                          target:
+                            entity_id: climate.thermostat_hc1
+                          data:
+                            temperature: 20.5
+                - service: script.annonce_accueil_pn_notif_alexa_musique
+                  data:
+                    who: "{{ who }}"
+                    alexa: "{{ alexa }}"
+                    pr1: "{{ pr1 }}"
+                    message: "{{ msg }}"
+                    music_id: "{{ music_id }}"
+

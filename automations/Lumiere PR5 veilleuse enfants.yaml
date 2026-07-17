@@ -1,0 +1,36 @@
+- id: Gestion PR5 veilleuse enfants
+  alias: "Gestion veilleuses enfants : PR4 et PR5"
+  description: "Allume PR4 et PR5 à 20h et les éteint à 7h30 tous les jours"
+  
+  trigger:
+    - trigger: time
+      at: '20:00:00'
+      id: on_time
+    - trigger: time
+      at: '07:30:00'
+      id: off_time
+
+  action:
+    - choose:
+        # Bloc d'allumage à 20h
+        - conditions:
+            - condition: trigger
+              id: on_time
+          sequence:
+            - action: switch.turn_on
+              target:
+                entity_id:
+                  - switch.zpr4
+                  - switch.pr5
+                  
+        # Bloc d'extinction à 07h30
+        - conditions:
+            - condition: trigger
+              id: off_time
+          sequence:
+            - action: switch.turn_off
+              target:
+                entity_id:
+                  - switch.zpr4
+                  - switch.pr5
+  mode: single

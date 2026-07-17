@@ -1,0 +1,108 @@
+- id: entree_auto
+  alias: lumi
+  description: >
+    Allume si présence ET nuit (soleil sous l'horizon),
+    1% si mode TV, 100% sinon.
+    Éteint après 1 min (TV), 5 min, ou 2 min entre 22h30 et 05h30. Délai réarmable.
+  mode: restart
+
+  variables:
+    lux_threshold: 2000
+    is_dark: >
+      {{ is_state('sun.sun','below_horizon') or (states('sensor.zrain_lux_illuminance')|float(9999)) < lux_threshold }}
+
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.zpir3_occupancy
+
+  action:
+    - choose:
+        # ---- ALLUMAGE : uniquement quand il fait nuit ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.zpir3_occupancy
+              state: "on"
+            - condition: template
+              value_template: "{{ is_dark }}"
+          sequence:
+            - choose:
+                # 1) Faible luminosité : 20h30 → 00h00 ou 00h01 → 06h30
+                - conditions:
+                    - condition: or
+                      conditions:
+                        - condition: time
+                          after: "20:30:00"
+                          before: "23:59:59"
+                        - condition: time
+                          after: "00:00:01"
+                          before: "06:30:00"
+                  sequence:
+                    - service: light.turn_on
+                      target:
+                        entity_id: light.amp_entree
+                      data:
+                        brightness_pct: 10
+                        transition: 0.5
+
+                # 2) Sinon, si mode TV → 1 %
+                - conditions:
+                    - condition: state
+                      entity_id: input_boolean.mode_tv
+                      state: "on"
+                  sequence:
+                    - service: light.turn_on
+                      target:
+                        entity_id: light.amp_entree
+                      data:
+                        brightness_pct: 1
+                        transition: 0.5
+
+              # 3) Sinon → 100 %
+              default:
+                - service: light.turn_on
+                  target:
+                    entity_id: light.amp_entree
+                  data:
+                    brightness_pct: 100
+                    transition: 0.3
+
+        # ---- EXTINCTION : toujours autorisée ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.zpir3_occupancy
+              state: "off"
+          sequence:
+            - choose:
+                # Entre 20h30 et 06h30 → 2 minutes
+                - conditions:
+                    - condition: or
+                      conditions:
+                        - condition: time
+                          after: "20:30:00"
+                          before: "23:59:59"
+                        - condition: time
+                          after: "00:00:01"
+                          before: "06:30:00"
+                  sequence:
+                    - delay: "00:01:30"
+
+                # Sinon, si mode TV → 1 minute
+                - conditions:
+                    - condition: state
+                      entity_id: input_boolean.mode_tv
+                      state: "on"
+                  sequence:
+                    - delay: "00:01:00"
+
+              # Sinon → 4 minutes
+              default:
+                - delay: "00:04:00"
+
+            # On vérifie qu'il n'y a toujours PAS de présence avant d'éteindre
+            - condition: state
+              entity_id: binary_sensor.zpir3_occupancy
+              state: "off"
+
+            - service: light.turn_off
+              target:
+                entity_id: light.amp_entree

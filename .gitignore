@@ -1,0 +1,19 @@
+# --- Exclusions Standard Home Assistant ---
+home-assistant_v2.db
+home-assistant_v2.db-shm
+home-assistant_v2.db-wal
+*.log
+*.db
+.storage/
+.cache/
+
+# --- Données Sensibles (Mots de passe / Clés API) ---
+secrets.yaml
+
+# --- Fichiers Système et Environnement ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.ha_cursor_agent_key
+.ha_run.lock

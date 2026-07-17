@@ -1,0 +1,48 @@
+- id: chaudiere_alerte_pression
+  alias: Chaudière – Alerte pression (notif + persistant)
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.alarme_pression_chaudiere
+    to: 'on'
+    for: 00:02:00
+    id: alarm_on
+    trigger: state
+  - entity_id: binary_sensor.alarme_pression_chaudiere
+    to: 'off'
+    for: 00:02:00
+    id: alarm_off
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: alarm_on
+      sequence:
+      - variables:
+          p: '{{ states(''sensor.pression_chauffage_num'') }}'
+      - data:
+          title: ⚠️ Alerte pression chaudière
+          message: 'La pression est hors plage ({{ p }} bar). Seuils : < 0.8 bar ou
+            > 2.5 bar. Vérifie la purge/fuite ou rajoute de l''eau si nécessaire.'
+          notification_id: boiler_pressure_alert
+        action: persistent_notification.create
+      - data:
+          title: Chaudière – Alerte pression
+          message: 'Pression hors plage: {{ states(''sensor.pression_chauffage_num'')
+            }} bar (Seuils: <0.8 / >2.5). Action recommandée.'
+        action: notify.notify
+    - conditions:
+      - condition: trigger
+        id: alarm_off
+      sequence:
+      - data:
+          notification_id: boiler_pressure_alert
+        action: persistent_notification.dismiss
+      - data:
+          title: Chaudière – Pression OK
+          message: 'La pression est revenue normale: {{ states(''sensor.pression_chauffage_num'')
+            }} bar.'
+        action: notify.notify
+  mode: single
+  

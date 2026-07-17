@@ -1,0 +1,94 @@
+- id: lumiere_auto_salone
+  alias: Lumières auto – Salon (MS2 + zPIR4 → Lumiere salon)
+  mode: restart
+  description: >
+    Allume sur mouvement si sombre. Après 22:00 : 1% de luminosité.
+    Extinction réarmable (2 min après 22h, 5/15 min avant 22h).
+
+  variables:
+    lux_threshold: 600
+    is_dark: >
+      {{ is_state('sun.sun','below_horizon') or (states('sensor.ms2_illuminance')|float(9999)) < lux_threshold }}
+
+    any_occupied: >
+      {{ is_state('binary_sensor.ms2_presence','on') or is_state('binary_sensor.zpir4_occupancy','on') }}
+
+    both_clear: >
+      {{ is_state('binary_sensor.ms2_presence','off') and is_state('binary_sensor.zpir4_occupancy','off') }}
+
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.ms2_presence
+        - binary_sensor.zpir4_occupancy
+
+  action:
+    - choose:
+        # ---- ALLUMAGE APRÈS 22:00 : faible luminosité ----
+        - conditions:
+            - condition: template
+              value_template: "{{ any_occupied }}"
+            - condition: template
+              value_template: "{{ is_dark }}"
+            - condition: or
+              conditions:
+                - condition: time
+                  after: "22:00:00"      # 22:00 → 23:59:59
+                - condition: time
+                  before: "05:30:00"     # 00:00 → 05:30
+          sequence:
+            - service: light.turn_on
+              target:
+                entity_id: light.lumieres_salon
+              data:
+                brightness_pct: 1
+                transition: 0.3
+
+        # ---- ALLUMAGE AVANT 21:30 : normal ----
+        - conditions:
+            - condition: template
+              value_template: "{{ any_occupied }}"
+            - condition: template
+              value_template: "{{ is_dark }}"
+            - condition: time
+              before: "22:00:00"
+          sequence:
+            - service: light.turn_on
+              target:
+                entity_id: light.lumieres_salon
+              data:
+                brightness_pct: 45
+                transition: 0.3
+
+        # ---- EXTINCTION (absence) : réarmable selon l'heure ----
+        - conditions:
+            - condition: template
+              value_template: "{{ both_clear }}"
+          sequence:
+            - choose:
+                # Après 22h → extinction 2 min après dernière absence
+                - conditions:
+                    - condition: time
+                      after: "22:00:00"
+                  sequence:
+                    - delay: "00:02:00"
+
+                # Entre 16h et 19h55 → extinction 15 min après
+                - conditions:
+                    - condition: time
+                      after: "16:00:00"
+                      before: "19:55:00"
+                  sequence:
+                    - delay: "00:15:00"
+
+              # Autres horaires → extinction 5 min après
+              default:
+                - delay: "00:08:00"
+
+            # Vérifie qu'il n'y a toujours pas de présence après le délai
+            - condition: template
+              value_template: "{{ both_clear }}"
+
+            - service: light.turn_off
+              target:
+                entity_id: light.lumieres_salon

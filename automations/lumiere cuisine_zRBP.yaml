@@ -1,0 +1,46 @@
+- id: 'bouton_zRBP1_dim_amp_cuisine3'
+  alias: Bouton ZG-101ZD – Dimmer ampoule cuisine 3
+  mode: queued        # pour ne pas perdre les rotations rapides
+  trigger:
+    - platform: state
+      entity_id: sensor.zRBP1_action   # <-- adapte avec ton entity_id réel
+
+  condition: []
+
+  action:
+    - choose:
+        # ---- Rotation vers la droite : +5% de luminosité ----
+        - conditions:
+            - condition: state
+              entity_id: sensor.zRBP1_action
+              state: "rotate_right"    # ou "rotate_right" selon ce que tu vois
+          sequence:
+            - service: light.turn_on
+              target:
+                entity_id: light.lumieres_cuisines
+              data:
+                brightness_step_pct: 10       # +5% à chaque crans
+                transition: 0.1              # petite transition fluide
+
+        # ---- Rotation vers la gauche : -5% de luminosité ----
+        - conditions:
+            - condition: state
+              entity_id: sensor.zRBP1_action
+              state: "rotate_left"  # ou "rotate_left"
+          sequence:
+            - service: light.turn_on
+              target:
+                entity_id: light.lumieres_cuisines
+              data:
+                brightness_step_pct: -10      # -5% à chaque cran
+                transition: 0.1
+
+        # ---- Clic simple : toggle ON/OFF ----
+        - conditions:
+            - condition: state
+              entity_id: sensor.zRBP1_action
+              state: "single"                # ou "single_left", "single_center" etc.
+          sequence:
+            - service: light.toggle
+              target:
+                entity_id: light.lumieres_cuisines

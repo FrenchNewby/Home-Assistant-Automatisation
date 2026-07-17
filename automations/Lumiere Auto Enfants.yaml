@@ -1,0 +1,44 @@
+- id: Lumiere enfant
+  alias: Lumiere auto enfants
+  description: Allume umiere des enfants apres 08H30 jusqu'a 19H30
+  mode: restart
+
+  variables:
+    lux_threshold: 500
+
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.zpir5_occupancy
+
+  action:
+    - choose:
+        # ---- ALLUMAGE (présence) :
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.zpir5_occupancy
+              state: "on"
+            - condition: template
+              value_template: >
+                {{ (states('sensor.zrain_lux_illuminance') | float(9999)) < lux_threshold }}
+            - condition: time
+              after: "09:30:00"
+              before: "19:30:00"
+          sequence:
+            - service: light.turn_on
+              target:
+                entity_id: light.amp_chambre_enfant
+
+        # ---- EXTINCTION (absence) : jamais limitée dans le temps ----
+        - conditions:
+            - condition: state
+              entity_id: binary_sensor.zpir5_occupancy
+              state: "off"
+          sequence:
+            - delay: "00:08:00"     # réarmable via mode: restart
+            - condition: state
+              entity_id: binary_sensor.zpir5_occupancy
+              state: "off"
+            - service: light.turn_off
+              target:
+                entity_id: light.amp_chambre_enfant

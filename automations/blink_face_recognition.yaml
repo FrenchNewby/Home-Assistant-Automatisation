@@ -1,0 +1,46 @@
+- id: blink_face_recognition_salon
+  alias: "Caméra Salon – Détection et Identification Visage"
+  description: "Déclenche l'analyse Double Take / CodeProject.AI sur détection de mouvement Blink"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.salle_a_manger_salon_mouvement
+      to: "on"
+      id: motion
+    - platform: state
+      entity_id: input_boolean.detection_mouvement_salon_blink
+      to: "on"
+      id: manual
+  action:
+    # 1. On ordonne à la caméra Blink de prendre immédiatement une nouvelle photo (snapshot)
+    - service: blink.trigger_camera
+      target:
+        entity_id: camera.salle_a_manger_salon
+
+    # 2. On attend 10 secondes que la caméra prenne la photo et l'envoie sur le cloud Blink
+    - delay: "00:00:10"
+
+    # 3. On force HA à interroger le cloud Blink pour récupérer cette nouvelle photo qui vient d'être mise à jour
+    - service: homeassistant.update_entity
+      target:
+        entity_id: camera.salle_a_manger_salon
+
+    # 4. On extrait la photo sous forme de fichier local dans le dossier public /www/
+    - service: camera.snapshot
+      target:
+        entity_id: camera.salle_a_manger_salon
+      data:
+        filename: "/config/www/salon_snapshot.jpg"
+
+    # 5. On appelle Double Take pour faire l'analyse sur la nouvelle photo
+    - service: rest_command.double_take_salon
+
+    # 6. Si déclenchement manuel, on remet le bouton à "off" pour la prochaine détection
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: manual
+          sequence:
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.detection_mouvement_salon_blink
+  mode: single
