@@ -1,0 +1,63 @@
+- id: 'automation_double_take_security_camera'
+  alias: 'Caméra Sécurité - Déclencher Reconnaissance Faciale Double Take'
+  description: 'Phase 1: 20 photos max jusqu a detection humaine. Phase 2: 20 photos max jusqu a identification du prénom.'
+  trigger:
+    - platform: state
+      entity_id: event.entree_security_camera_notification
+    - platform: state
+      entity_id: switch.security_camera_detection_de_mouvement
+      to: 'on'
+  action:
+    # --- PHASE 1 : Recherche de présence humaine (max 20 photos) ---
+    - repeat:
+        while:
+          - condition: template
+            value_template: >-
+              {% set counts = state_attr('sensor.double_take_salon', 'counts') %}
+              {{ (counts.person if counts and 'person' in counts else 0) < 1 }}
+          - condition: template
+            value_template: "{{ repeat.index <= 20 }}"
+        sequence:
+          - action: camera.snapshot
+            target:
+              entity_id: camera.ip_camera_profile_000
+            data:
+              filename: "/config/www/salon_snapshot_{{ repeat.index }}.jpg"
+          - action: rest_command.double_take_security_camera
+            data:
+              index: "{{ repeat.index }}"
+          - delay:
+              milliseconds: 700
+
+    # --- PHASE 2 : Si quelqu un est présent mais non reconnu (Unknown), rafale jusqu a identification du prénom (max 20 photos) ---
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >-
+                {% set counts = state_attr('sensor.double_take_salon', 'counts') %}
+                {{ (counts.person if counts and 'person' in counts else 0) >= 1 }}
+            - condition: template
+              value_template: >-
+                {% set counts = state_attr('sensor.double_take_salon', 'counts') %}
+                {{ (counts.match if counts and 'match' in counts else 0) < 1 }}
+          sequence:
+            - repeat:
+                while:
+                  - condition: template
+                    value_template: >-
+                      {% set counts = state_attr('sensor.double_take_salon', 'counts') %}
+                      {{ (counts.match if counts and 'match' in counts else 0) < 1 }}
+                  - condition: template
+                    value_template: "{{ repeat.index <= 20 }}"
+                sequence:
+                  - action: camera.snapshot
+                    target:
+                      entity_id: camera.ip_camera_profile_000
+                    data:
+                      filename: "/config/www/salon_snapshot_phase2_{{ repeat.index }}.jpg"
+                  - action: rest_command.double_take_security_camera
+                    data:
+                      index: "phase2_{{ repeat.index }}"
+                  - delay:
+                      milliseconds: 700
+  mode: single

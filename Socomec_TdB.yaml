@@ -1,222 +1,196 @@
-title: Tableau de Bord Socomec Digiware
+
+
+
+title: Caméra de Sécurité (ONVIF & Debug IA)
 views:
-  - title: Mesures Physiques
-    path: mesures_physiques
-    icon: mdi:flash-circle
+  - title: Live & Contrôles PTZ
+    path: live_ptz
+    icon: mdi:camera
     type: sections
-    max_columns: 3
+    max_columns: 2
     sections:
-      # =================================================================
-      # SECTION 1 : ALIMENTATION & RÉSEAU ÉLECTRIQUE (U-30)
-      # =================================================================
       - type: grid
-        title: Réseau Électrique (U-30)
         cards:
+          - type: heading
+            heading: Flux Vidéo HD en Direct (ONVIF)
+          - type: picture-entity
+            entity: camera.ip_camera_profile_000
+            name: Flux Vidéo Temps Réel (ONVIF)
+            camera_view: live
+            show_state: true
+            show_name: true
+          - type: entities
+            title: Statut Caméra & Carte SD
+            show_header_toggle: false
+            entities:
+              - entity: switch.security_camera_detection_de_mouvement
+                name: Détection de Mouvement Active
+                icon: mdi:motion-sensor
+              - entity: switch.security_camera_camera_privacy
+                name: Mode Confidentialité (Masquer la caméra)
+                icon: mdi:incognito
+              - entity: sensor.security_camera_sd_status
+                name: État Carte Mémoire SD
+                icon: mdi:sd
+      - type: grid
+        cards:
+          - type: heading
+            heading: Contrôle Motorisé (Pan-Tilt-Zoom)
           - type: grid
             square: false
             columns: 3
             cards:
-              - type: sensor
-                entity: sensor.socomec_u30_tension_v1
-                name: Tension V1
-                graph: line
-              - type: sensor
-                entity: sensor.socomec_u30_tension_v2
-                name: Tension V2
-                graph: line
-              - type: sensor
-                entity: sensor.socomec_u30_tension_v3
-                name: Tension V3
-                graph: line
+              - type: button
+                icon: mdi:blank
+                tap_action:
+                  action: none
+              - type: button
+                name: Haut
+                icon: mdi:chevron-up
+                tap_action:
+                  action: call-service
+                  service: button.press
+                  target:
+                    entity_id: button.security_camera_ptz_up
+              - type: button
+                icon: mdi:blank
+                tap_action:
+                  action: none
+              - type: button
+                name: Gauche
+                icon: mdi:chevron-left
+                tap_action:
+                  action: call-service
+                  service: button.press
+                  target:
+                    entity_id: button.security_camera_ptz_left
+              - type: button
+                name: STOP
+                icon: mdi:stop-circle
+                tap_action:
+                  action: call-service
+                  service: button.press
+                  target:
+                    entity_id: button.security_camera_ptz_stop
+              - type: button
+                name: Droite
+                icon: mdi:chevron-right
+                tap_action:
+                  action: call-service
+                  service: button.press
+                  target:
+                    entity_id: button.security_camera_ptz_right
+              - type: button
+                icon: mdi:blank
+                tap_action:
+                  action: none
+              - type: button
+                name: Bas
+                icon: mdi:chevron-down
+                tap_action:
+                  action: call-service
+                  service: button.press
+                  target:
+                    entity_id: button.security_camera_ptz_down
+              - type: button
+                icon: mdi:blank
+                tap_action:
+                  action: none
 
-          - type: entities
-            entities:
-              - entity: sensor.socomec_u30_tension_simple_systeme
-                name: Tension Simple Moyenne
-                icon: mdi:sine-wave
-              - entity: sensor.socomec_u30_tension_composee_systeme
-                name: Tension Composée Moyenne
-                icon: mdi:sine-wave
-              - entity: sensor.socomec_u30_frequence
-                name: Fréquence Réseau
-                icon: mdi:current-ac
-
-      # =================================================================
-      # SECTION 2 : MODULE S-135 (CHARGES & PUISSANCES)
-      # =================================================================
+  - title: Simulation & Debug IA
+    path: debug_tracabilite
+    icon: mdi:bug
+    type: sections
+    max_columns: 2
+    sections:
       - type: grid
-        title: Centrales S-135 (Départs)
         cards:
-          # Phase 1
-          - type: entities
-            title: Charge Phase 1 (I1)
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_s135_courant_i1
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_s135_puissance_active_p1
-                name: Puissance Active
-                icon: mdi:lightning-bolt
+          - type: heading
+            heading: 📸 Image Soumise à Double Take
+          - type: picture-entity
+            entity: camera.ip_camera_profile_000
+            name: Capture instantanée extraite du flux
+            show_state: false
+            show_name: true
+          - type: button
+            name: 🌐 OUVRIR LA GALERIE DOUBLE TAKE (WEB UI)
+            icon: mdi:open-in-new
+            tap_action:
+              action: url
+              url_path: /c7657554_double-take
 
-          # Phase 2
-          - type: entities
-            title: Charge Phase 2 (I2)
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_s135_courant_i2
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_s135_puissance_active_p2
-                name: Puissance Active
-                icon: mdi:lightning-bolt
-
-          # Phase 3
-          - type: entities
-            title: Charge Phase 3 (I3)
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_s135_courant_i3
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_s135_puissance_active_p3
-                name: Puissance Active
-                icon: mdi:lightning-bolt
-
-          # Totaux & Diagnostic S-135
-          - type: entities
-            title: S-135 - Résumé Global
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_s135_courant_systeme
-                name: Courant Système Moyen
-              - entity: sensor.socomec_s135_puissance_active_totale
-                name: Puissance Active Totale
-              - entity: sensor.socomec_s135_puissance_reactive_totale
-                name: Puissance Réactive Totale
-              - entity: sensor.socomec_s135_puissance_apparente_totale
-                name: Puissance Apparente Totale
-              - entity: sensor.socomec_s135_facteur_de_puissance
-                name: Facteur de Puissance (cos φ)
-              - entity: sensor.socomec_s135_energie_active_ea
-                name: Énergie Cumulative Ea+
-
-      # =================================================================
-      # SECTION 3 : MODULE I-35 (1) (CHARGES & PUISSANCES)
-      # =================================================================
       - type: grid
-        title: Centrales I-35 (1)
         cards:
-          # Phase 1
+          - type: heading
+            heading: 🚀 Simuler un Mouvement & Lancer l'IA
+          - type: button
+            name: SIMULER DÉTECTION & ANALYSER LE VISAGE
+            icon: mdi:play-circle-outline
+            tap_action:
+              action: call-service
+              service: automation.trigger
+              target:
+                entity_id: automation.camera_securite_declencher_reconnaissance_faciale_double_take
           - type: entities
-            title: Charge Phase 1 (I1)
+            title: 📊 Confirmation & Statut Double Take
             show_header_toggle: false
             entities:
-              - entity: sensor.socomec_i35_courant_i1
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_i35_puissance_active_p1
-                name: Puissance Active
-                icon: mdi:lightning-bolt
+              - entity: sensor.double_take_horodatage_scan
+                name: Heure du Dernier Scan IA
+                icon: mdi:clock-check-outline
+              - entity: sensor.double_take_duree_calcul_ia
+                name: Temps de Calcul CodeProject.AI
+                icon: mdi:timer-outline
+              - entity: sensor.double_take_personnes_detectees
+                name: Nb de Personnes Détectées
+                icon: mdi:account-group-outline
+              - entity: sensor.dernier_visage_detecte
+                name: Dernier Visage Identifié
+                icon: mdi:face-recognition
 
-          # Phase 2
-          - type: entities
-            title: Charge Phase 2 (I2)
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_i35_courant_i2
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_i35_puissance_active_p2
-                name: Puissance Active
-                icon: mdi:lightning-bolt
-
-          # Phase 3
-          - type: entities
-            title: Charge Phase 3 (I3)
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_i35_courant_i3
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_i35_puissance_active_p3
-                name: Puissance Active
-                icon: mdi:lightning-bolt
-
-          # Totaux & Diagnostic I-35 (1)
-          - type: entities
-            title: I-35 (1) - Résumé Global
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_i35_courant_systeme
-                name: Courant Système Moyen
-              - entity: sensor.socomec_i35_puissance_active_totale
-                name: Puissance Active Totale
-              - entity: sensor.socomec_i35_puissance_reactive_totale
-                name: Puissance Réactive Totale
-              - entity: sensor.socomec_i35_puissance_apparente_totale
-                name: Puissance Apparente Totale
-              - entity: sensor.socomec_i35_facteur_de_puissance
-                name: Facteur de Puissance (cos φ)
-              - entity: sensor.socomec_i35_energie_active_ea
-                name: Énergie Cumulative Ea+
-
-      # =================================================================
-      # SECTION 4 : MODULE I-35 (2) (CHARGES & PUISSANCES)
-      # =================================================================
+  - title: Réglages Caméra
+    path: reglages_camera
+    icon: mdi:tune-variant
+    type: sections
+    max_columns: 2
+    sections:
       - type: grid
-        title: Centrales I-35 (2)
         cards:
-          # Phase 1
+          - type: heading
+            heading: Options de Détection & Tracking
           - type: entities
-            title: Charge Phase 1 (I1)
+            title: Activer / Désactiver
             show_header_toggle: false
             entities:
-              - entity: sensor.socomec_i35_2_courant_i1
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_i35_2_puissance_active_p1
-                name: Puissance Active
-                icon: mdi:lightning-bolt
-
-          # Phase 2
+              - entity: switch.security_camera_motion_tracking
+                name: Suivi Automatique des Personnes (Tracking PTZ)
+                icon: mdi:target-account
+              - entity: switch.security_camera_sound_detection
+                name: Détection Sonore
+                icon: mdi:ear-hearing
+              - entity: switch.security_camera_camera_record
+                name: Enregistrement Vidéo Manuel
+                icon: mdi:record-rec
+      - type: grid
+        cards:
+          - type: heading
+            heading: Sensibilité & Sirène
           - type: entities
-            title: Charge Phase 2 (I2)
+            title: Ajustements Debug
             show_header_toggle: false
             entities:
-              - entity: sensor.socomec_i35_2_courant_i2
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_i35_2_puissance_active_p2
-                name: Puissance Active
-                icon: mdi:lightning-bolt
-
-          # Phase 3
-          - type: entities
-            title: Charge Phase 3 (I3)
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_i35_2_courant_i3
-                name: Courant Instantané
-                icon: mdi:current-ac
-              - entity: sensor.socomec_i35_2_puissance_active_p3
-                name: Puissance Active
-                icon: mdi:lightning-bolt
-
-          # Totaux & Diagnostic I-35 (2)
-          - type: entities
-            title: I-35 (2) - Résumé Global
-            show_header_toggle: false
-            entities:
-              - entity: sensor.socomec_i35_2_courant_systeme
-                name: Courant Système Moyen
-              - entity: sensor.socomec_i35_2_puissance_active_totale
-                name: Puissance Active Totale
-              - entity: sensor.socomec_i35_2_puissance_reactive_totale
-                name: Puissance Réactive Totale
-              - entity: sensor.socomec_i35_2_puissance_apparente_totale
-                name: Puissance Apparente Totale
-              - entity: sensor.socomec_i35_2_facteur_de_puissance
-                name: Facteur de Puissance (cos φ)
-              - entity: sensor.socomec_i35_2_energie_active_ea
-                name: Énergie Cumulative Ea+
+              - entity: select.security_camera_sensibilite_au_mouvement
+                name: Sensibilité Détection Mouvement
+                icon: mdi:tune
+              - entity: select.security_camera_sound_sensitivity
+                name: Sensibilité Détection Sonore
+                icon: mdi:volume-high
+              - entity: select.security_camera_vision_nocturne
+                name: Mode Vision Nocturne IR
+                icon: mdi:weather-night
+              - entity: select.security_camera_mode_d_enregistrement
+                name: Mode Enregistrement SD
+                icon: mdi:video-vintage
+              - entity: switch.security_camera_alarm
+                name: Sirène / Alarme Intégrée
+                icon: mdi:bullhorn-outline

@@ -15,7 +15,7 @@
       to: "on"
       id: presence_detectee
 
-    # 2) Absence de mouvement pendant 5 min
+    # 2) Absence de mouvement pendant 15 min
     - platform: state
       entity_id:
         - binary_sensor.pir3_occupancy

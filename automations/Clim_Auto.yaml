@@ -9,25 +9,25 @@
   trigger:
     # 1) Déclenchement initial du boost solaire (>500W)
     - platform: numeric_state
-      entity_id: sensor.puissance_injectee_reseau
+      entity_id: sensor.puissance_injectee_reseau_digiware
       above: 500
       for: "00:15:00"
       id: start_solar_ac
     # 2) Arrêt complet du boost solaire
     - platform: numeric_state
-      entity_id: sensor.puissance_injectee_reseau
+      entity_id: sensor.puissance_injectee_reseau_digiware
       below: 50
       for: "00:10:00"
       id: stop_solar_ac
     # 3) Augmentation progressive de la ventilation (analogique)
     - platform: numeric_state
-      entity_id: sensor.puissance_injectee_reseau
+      entity_id: sensor.puissance_injectee_reseau_digiware
       above: 200
       for: "00:03:00"
       id: increase_fan
     # 4) Réduction progressive de la ventilation (analogique)
     - platform: numeric_state
-      entity_id: sensor.puissance_injectee_reseau
+      entity_id: sensor.puissance_injectee_reseau_digiware
       below: 20
       for: "00:02:00"
       id: decrease_fan

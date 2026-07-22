@@ -260,9 +260,9 @@ play_music_multiroom:
         echo_entity: >-
           {% set name = states('input_select.choix_echo') | trim %}
           {% if name == 'Salon' %}media_player.echo_du_salon
-          {% elif name == 'Salle de Bain' %}media_player.echo_de_la_salle_de_bain
+          {% elif name == 'Salle de Bain' %}media_player.echo_dot_sdb
           {% elif name == 'Martin' %}media_player.echo_pop_briche
-          {% elif name == 'Flora' %}media_player.echo_dot_sdb
+          {% elif name == 'Flora' %}media_player.echo_flora
           {% elif name == 'Parents' %}media_player.echo_dot_briche
           {% elif name == 'Partout' %}media_player.partout
           {% endif %}
@@ -294,9 +294,9 @@ stop_music_multiroom:
         echo_entity: >-
           {% set name = states('input_select.choix_echo') | trim %}
           {% if name == 'Salon' %}media_player.echo_du_salon
-          {% elif name == 'Salle de Bain' %}media_player.echo_de_la_salle_de_bain
+          {% elif name == 'Salle de Bain' %}media_player.echo_dot_sdb
           {% elif name == 'Martin' %}media_player.echo_pop_briche
-          {% elif name == 'Flora' %}media_player.echo_dot_sdb
+          {% elif name == 'Flora' %}media_player.echo_flora
           {% elif name == 'Parents' %}media_player.echo_dot_briche
           {% elif name == 'Partout' %}media_player.partout
           {% endif %}

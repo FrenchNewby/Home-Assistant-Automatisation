@@ -9,7 +9,7 @@
   trigger:
     - id: started
       platform: numeric_state
-      entity_id: sensor.pr4_mal_puissance
+      entity_id: sensor.socomec_s135_machine_a_laver_puissance_active_p2
       above: 200
       for: '00:05:00'
 
@@ -17,7 +17,7 @@
     # 1) Attendre la vraie fin de cycle
     - wait_for_trigger:
         - platform: numeric_state
-          entity_id: sensor.pr4_mal_puissance
+          entity_id: sensor.socomec_s135_machine_a_laver_puissance_active_p2
           below: 8
           for: '00:10:00'
       timeout: '03:00:00'

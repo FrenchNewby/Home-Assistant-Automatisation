@@ -15,7 +15,7 @@
       state: "off"  # Ne le fait que si pas déjà exécuté aujourd'hui
     - condition: numeric_state
       entity_id:
-        - sensor.pr_ms1_illuminance
+        - sensor.ms1_illuminance
         - sensor.ms2_illuminance
       above: 1000
 

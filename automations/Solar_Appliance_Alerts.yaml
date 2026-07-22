@@ -47,7 +47,7 @@
         notification_id: solar_appliance_alert
 
     # 2) Notification mobile pour Johan
-    - service: notify.redmi13_johan
+    - service: notify.mobile_app_redmi13_johan
       data:
         title: "☀️ Production Solaire élevée"
         message: "Injection réseau > 600W. Pense à lancer des cycles d'appareils (machine à laver, lave-vaisselle) !"
